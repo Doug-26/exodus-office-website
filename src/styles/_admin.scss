@@ -1,0 +1,93 @@
+// Admin panel styles
+.ex-admin {
+  min-height: 100vh;
+  background: #f3f5f8;
+
+  &__bar {
+    background: $ex-navy;
+
+    .nav-link {
+      color: rgba(255, 255, 255, 0.75);
+      font-weight: 500;
+
+      &.active,
+      &:hover {
+        color: #fff;
+      }
+    }
+  }
+}
+
+.ex-auth {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+  background:
+    radial-gradient(40rem 20rem at 90% 0%, rgba($ex-teal, 0.35), transparent 60%),
+    linear-gradient(160deg, $ex-navy 0%, $ex-navy-700 100%);
+
+  .card {
+    width: 100%;
+    max-width: 26rem;
+    border: 0;
+    border-radius: $border-radius-xl;
+    box-shadow: var(--ex-shadow-lg);
+  }
+}
+
+.ex-thumb {
+  width: 4rem;
+  height: 3rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: $border-radius-sm;
+  background: $ex-sand;
+  display: grid;
+  place-items: center;
+  color: $ex-muted;
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &--lg {
+    width: 6rem;
+    height: 4.5rem;
+  }
+}
+
+.ex-dropzone {
+  display: block;
+  padding: 2rem 1rem;
+  text-align: center;
+  border: 2px dashed rgba($ex-navy, 0.2);
+  border-radius: $border-radius-lg;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+
+  &:hover,
+  &.is-over {
+    border-color: $ex-teal;
+    background: rgba($ex-teal, 0.04);
+  }
+
+  i {
+    font-size: 2rem;
+    color: $ex-teal;
+  }
+}
+
+.ex-inquiry {
+  cursor: pointer;
+
+  &.is-new {
+    border-left: 4px solid $ex-teal;
+  }
+}

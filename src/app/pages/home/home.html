@@ -1,0 +1,137 @@
+<!-- Hero -->
+<section class="ex-hero">
+  <div class="container">
+    <div class="row align-items-center g-4 g-lg-5">
+      <div class="col-lg-7">
+        <span class="ex-eyebrow ex-eyebrow--light">Virtual services you can rely on</span>
+        <h1 class="display-4 mb-4">Skilled people, quality work, and services you can trust.</h1>
+        <p class="lead mb-4 ex-hero__lead">
+          We're a team of trained Social Media Managers, Video Editors, and Bookkeepers who help businesses grow. You
+          focus on what matters most, and we take care of the rest.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a routerLink="/portfolio" class="btn btn-warning btn-lg">View our work</a>
+          <a routerLink="/contact" class="btn btn-outline-light btn-lg">Get in touch</a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="ex-hero-stack" aria-hidden="true">
+          @for (s of services; track s.id) {
+            <div class="ex-hero-tile ex-hero-tile--{{ $index }}">
+              <span class="ex-icon-badge"><i class="bi {{ s.icon }}"></i></span>
+              <div>
+                <strong>{{ s.title }}</strong>
+                <small>{{ s.tagline }}</small>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Trust strip -->
+<section class="ex-trust py-4">
+  <div class="container">
+    <div class="row g-3 justify-content-between">
+      @for (t of trust; track t.label) {
+        <div class="col-6 col-lg-auto">
+          <div class="ex-trust__item"><i class="bi {{ t.icon }}" aria-hidden="true"></i>{{ t.label }}</div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Services -->
+<section class="ex-section">
+  <div class="container">
+    <app-section-heading
+      center
+      eyebrow="What we do"
+      heading="Services built around your business"
+      subtitle="Each member of our team is trained in their field and keeps building their skills, so you get dependable, professional support."
+    />
+    <div class="row g-4 mt-4">
+      @for (s of services; track s.id) {
+        <div class="col-md-6 col-lg-4">
+          <article class="ex-card ex-card--hover d-flex flex-column">
+            <span class="ex-icon-badge ex-icon-badge--lg mb-4"><i class="bi {{ s.icon }}" aria-hidden="true"></i></span>
+            <h3 class="h4">{{ s.title }}</h3>
+            <p class="text-body-secondary">{{ s.summary }}</p>
+            <ul class="ex-checklist mb-4">
+              @for (d of s.deliverables.slice(0, 3); track d) {
+                <li>{{ d }}</li>
+              }
+            </ul>
+            <a routerLink="/services" [fragment]="s.id" class="mt-auto fw-semibold">
+              Learn more <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+          </article>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Featured work -->
+@if (loading() || featured().length) {
+  <section class="ex-section ex-bg-sand">
+    <div class="container">
+      <div class="d-md-flex justify-content-between align-items-end mb-5 gap-4">
+        <app-section-heading
+          eyebrow="Featured work"
+          heading="Recent projects"
+          subtitle="Videos, reels, and designs we've created for our clients."
+        />
+        <a routerLink="/portfolio" class="btn btn-outline-primary mt-3 mt-md-0 flex-shrink-0">See full portfolio</a>
+      </div>
+
+      @if (loading()) {
+        <div class="row g-4">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="col-md-4"><div class="ex-skeleton" style="height: 18rem"></div></div>
+          }
+        </div>
+      } @else {
+        <div class="ex-masonry">
+          @for (p of featured(); track p.id) {
+            <app-project-card [project]="p" />
+          }
+        </div>
+      }
+    </div>
+  </section>
+}
+
+<!-- Why choose us -->
+<section class="ex-section">
+  <div class="container">
+    <div class="row g-4 g-lg-5 align-items-center">
+      <div class="col-lg-5">
+        <app-section-heading
+          eyebrow="Why Exodus"
+          heading="Partnerships built on trust"
+          subtitle="We believe professionalism, quality, and commitment are the keys to a successful partnership. We value your time and your trust, and every piece of work we deliver reflects that."
+        />
+        <a routerLink="/about" class="btn btn-primary mt-4">More about us</a>
+      </div>
+      <div class="col-lg-7">
+        <div class="row g-4">
+          @for (v of values; track v.title) {
+            <div class="col-sm-6">
+              <div class="ex-card">
+                <span class="ex-icon-badge ex-icon-badge--amber mb-3"><i class="bi {{ v.icon }}" aria-hidden="true"></i></span>
+                <h3 class="h5">{{ v.title }}</h3>
+                <p class="text-body-secondary mb-0">{{ v.text }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-cta-band />

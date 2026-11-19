@@ -1,0 +1,95 @@
+<section class="ex-section pt-5">
+  <div class="container">
+    <a routerLink="/portfolio" class="d-inline-block mb-4 fw-semibold">
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back to portfolio
+    </a>
+
+    @if (loading()) {
+      <div class="row g-4 g-lg-5">
+        <div class="col-lg-8"><div class="ex-skeleton" style="height: 26rem"></div></div>
+        <div class="col-lg-4"><div class="ex-skeleton" style="height: 16rem"></div></div>
+      </div>
+    } @else if (error()) {
+      <div class="alert alert-danger">{{ error() }}</div>
+    } @else if (project(); as p) {
+      <div class="row g-4 g-lg-5">
+        <!-- Media -->
+        <div class="col-lg-8 order-2 order-lg-1">
+          <div class="d-grid gap-4">
+            @for (m of videos(); track m.id) {
+              <figure class="mb-0">
+                @if (m.type === 'video_embed' && m.embed_url) {
+                  <app-video-embed [url]="m.embed_url" [aspect]="m.aspect" [title]="m.caption || p.title" />
+                } @else if (m.storage_path) {
+                  <div
+                    class="ex-media-frame"
+                    [class.ex-media-frame--portrait]="m.aspect === '9:16' || m.aspect === '4:5'"
+                  >
+                    <div class="ratio" [class]="ratioClass(m.aspect)">
+                      <video [src]="fileUrl(m.storage_path) + '#t=0.1'" controls playsinline preload="metadata"></video>
+                    </div>
+                  </div>
+                }
+                @if (m.caption) {
+                  <figcaption class="small text-body-secondary mt-2 text-center">{{ m.caption }}</figcaption>
+                }
+              </figure>
+            }
+
+            @if (images().length) {
+              <div class="ex-gallery">
+                @for (img of images(); track img.src; let i = $index) {
+                  <button type="button" class="ratio ratio-1x1" (click)="lightboxIndex.set(i)" [attr.aria-label]="'Open ' + img.alt">
+                    <img [src]="img.src" [alt]="img.alt" loading="lazy" decoding="async" />
+                  </button>
+                }
+              </div>
+            }
+
+            @if (!videos().length && !images().length) {
+              <div class="ex-empty">Media for this project is coming soon.</div>
+            }
+          </div>
+        </div>
+
+        <!-- Details -->
+        <aside class="col-lg-4 order-1 order-lg-2">
+          <div class="position-sticky" style="top: 6rem">
+            <span class="badge ex-badge-cat mb-3">
+              <i class="bi {{ category()?.icon }} me-1" aria-hidden="true"></i>{{ category()?.label }}
+            </span>
+            <h1 class="h2 mb-3">{{ p.title }}</h1>
+            @if (p.client_name) {
+              <p class="text-body-secondary mb-3"><i class="bi bi-building me-2" aria-hidden="true"></i>{{ p.client_name }}</p>
+            }
+            @if (p.description) {
+              <p class="ex-prose">{{ p.description }}</p>
+            }
+            @if (p.tools.length) {
+              <h2 class="h6 text-uppercase text-body-secondary mt-4 mb-2" style="letter-spacing: 0.1em">Tools used</h2>
+              <div>
+                @for (t of p.tools; track t) {
+                  <span class="ex-tool">{{ t }}</span>
+                }
+              </div>
+            }
+            <div class="ex-card mt-4 p-4">
+              <h2 class="h6">Want something similar?</h2>
+              <p class="small text-body-secondary">Tell us about your project and we'll get back to you.</p>
+              <a routerLink="/contact" class="btn btn-primary w-100">Start a project</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <app-lightbox [images]="images()" [(index)]="lightboxIndex" />
+    } @else {
+      <div class="ex-empty">
+        <i class="bi bi-question-circle d-block mb-3" aria-hidden="true"></i>
+        <h1 class="h4 text-body">Project not found</h1>
+        <p>This project may have been moved or is no longer available.</p>
+        <a routerLink="/portfolio" class="btn btn-primary">Browse the portfolio</a>
+      </div>
+    }
+  </div>
+</section>

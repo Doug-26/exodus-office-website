@@ -1,0 +1,177 @@
+<section aria-labelledby="media-heading">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+      <h2 id="media-heading" class="h4 mb-1">Videos &amp; images</h2>
+      <p class="small text-body-secondary mb-0">
+        Shown on the project page in this order. Videos appear first, then images as a gallery.
+      </p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-danger" role="alert">{{ error() }}</div>
+  }
+
+  <!-- Existing media -->
+  @if (loading()) {
+    <div class="text-center py-4"><span class="spinner-border text-primary" role="status" aria-label="Loading"></span></div>
+  } @else if (items().length) {
+    <ul class="list-group shadow-sm mb-4">
+      @for (m of items(); track m.id; let first = $first; let last = $last; let i = $index) {
+        <li class="list-group-item p-3">
+          <div class="d-flex flex-wrap align-items-center gap-3">
+            <div class="btn-group-vertical btn-group-sm">
+              <button type="button" class="btn btn-light" [disabled]="first || busy()" (click)="move(i, -1)" aria-label="Move up"><i class="bi bi-chevron-up"></i></button>
+              <button type="button" class="btn btn-light" [disabled]="last || busy()" (click)="move(i, 1)" aria-label="Move down"><i class="bi bi-chevron-down"></i></button>
+            </div>
+
+            <div class="ex-thumb ex-thumb--lg">
+              @if (thumb(m); as src) {
+                <img [src]="src" alt="" loading="lazy" />
+              } @else if (m.type === 'video_file' && fileUrl(m)) {
+                <video [src]="fileUrl(m)" preload="metadata" muted class="w-100 h-100" style="object-fit: cover"></video>
+              } @else {
+                <i class="bi fs-3" [class]="embedIcon(m)"></i>
+              }
+            </div>
+
+            <div class="flex-grow-1" style="min-width: 12rem">
+              <div class="fw-semibold small mb-1">
+                {{ typeLabel(m) }}
+                @if (m.embed_url) {
+                  <a [href]="m.embed_url" target="_blank" rel="noopener" class="fw-normal ms-1 text-break">{{ m.embed_url }}</a>
+                }
+              </div>
+              <input
+                class="form-control form-control-sm"
+                placeholder="Caption (optional)"
+                [value]="m.caption ?? ''"
+                (blur)="setCaption(m, $any($event.target).value)"
+                aria-label="Caption"
+              />
+            </div>
+
+            @if (m.type !== 'image') {
+              <select
+                class="form-select form-select-sm w-auto"
+                (change)="setAspect(m, $any($event.target).value)"
+                [disabled]="busy()"
+                aria-label="Video shape"
+              >
+                @for (a of aspects; track a.value) {
+                  <option [value]="a.value" [selected]="a.value === m.aspect">{{ a.label }}</option>
+                }
+              </select>
+            }
+
+            <button type="button" class="btn btn-sm btn-light text-danger" [disabled]="busy()" (click)="remove(m)" aria-label="Remove">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="text-body-secondary">No media yet. Add a video or some images below.</p>
+  }
+
+  <!-- Add media -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 pt-3">
+      <ul class="nav nav-pills">
+        <li class="nav-item">
+          <button type="button" class="nav-link" [class.active]="tab() === 'upload'" (click)="tab.set('upload')">
+            <i class="bi bi-cloud-upload me-1"></i> Upload files
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="nav-link" [class.active]="tab() === 'link'" (click)="tab.set('link')">
+            <i class="bi bi-link-45deg me-1"></i> Add video link
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="card-body p-4">
+      @if (tab() === 'upload') {
+        <label
+          class="ex-dropzone"
+          [class.is-over]="dragOver()"
+          (dragover)="onDragOver($event)"
+          (dragleave)="dragOver.set(false)"
+          (drop)="onDrop($event)"
+        >
+          <i class="bi bi-cloud-arrow-up d-block mb-2"></i>
+          <strong>Drop images or videos here</strong> or click to choose
+          <span class="d-block small text-body-secondary mt-1">
+            Up to {{ maxMb }} MB per file. For longer videos, add a YouTube, Vimeo, or Facebook link instead.
+          </span>
+          <input type="file" accept="image/*,video/*" multiple hidden (change)="onFileInput($event)" />
+        </label>
+
+        @for (u of uploads(); track u.key) {
+          <div class="mt-3">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-truncate">{{ u.name }}</span>
+              @if (u.error) {
+                <button type="button" class="btn-close btn-sm" (click)="dismissUpload(u.key)" aria-label="Dismiss"></button>
+              } @else {
+                <span>{{ u.progress }}%</span>
+              }
+            </div>
+            @if (u.error) {
+              <div class="alert alert-danger small py-2 mb-0">{{ u.error }}</div>
+            } @else {
+              <div class="progress" role="progressbar" [attr.aria-valuenow]="u.progress" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Uploading ' + u.name">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" [style.width.%]="u.progress"></div>
+              </div>
+            }
+          </div>
+        }
+      } @else {
+        <form class="row g-3 align-items-end" (ngSubmit)="addLink()">
+          <div class="col-md-7">
+            <label for="videoUrl" class="form-label">
+              Video link
+              <i class="bi bi-youtube ms-1 text-body-secondary" title="YouTube"></i>
+              <i class="bi bi-vimeo text-body-secondary" title="Vimeo"></i>
+              <i class="bi bi-facebook text-body-secondary" title="Facebook"></i>
+            </label>
+            <input
+              id="videoUrl"
+              name="videoUrl"
+              class="form-control"
+              placeholder="YouTube, Vimeo, or Facebook video / Reel link"
+              [(ngModel)]="linkUrl"
+              (ngModelChange)="onLinkChange()"
+              [class.is-invalid]="linkError()"
+            />
+            <div class="invalid-feedback">{{ linkError() }}</div>
+          </div>
+          <div class="col-md-3">
+            <label for="videoAspect" class="form-label">Shape</label>
+            <select id="videoAspect" name="videoAspect" class="form-select" [(ngModel)]="linkAspect">
+              @for (a of aspects; track a.value) {
+                <option [value]="a.value">{{ a.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary" [disabled]="busy() || !linkUrl.trim()">Add</button>
+          </div>
+          <ul class="small text-body-secondary mb-0 ps-3">
+            <li>
+              <strong>YouTube:</strong> upload as <strong>Unlisted</strong> if you don't want it on a public channel.
+              It will still play here.
+            </li>
+            <li>
+              <strong>Facebook:</strong> the video or Reel must be <strong>Public</strong>. Use the link from the
+              browser's address bar (it contains <code>/reel/</code> or <code>/videos/</code> followed by numbers).
+              <code>fb.watch</code> and <code>/share/</code> links won't work. Facebook doesn't provide thumbnails,
+              so set a <strong>cover image</strong> for the portfolio card.
+            </li>
+          </ul>
+        </form>
+      }
+    </div>
+  </div>
+</section>

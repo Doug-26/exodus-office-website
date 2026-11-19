@@ -1,0 +1,593 @@
+// ---------------------------------------------------------------- Navbar
+.ex-navbar {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid rgba($ex-navy, 0.06);
+
+  .nav-link {
+    font-weight: 500;
+    color: $ex-ink;
+
+    &.active,
+    &:hover {
+      color: $ex-teal;
+    }
+  }
+}
+
+.ex-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: $ex-navy;
+  text-decoration: none !important;
+
+  img {
+    width: 40px;
+    height: 40px;
+  }
+
+  &__name {
+    display: block;
+    font-family: $headings-font-family;
+    font-weight: 700;
+    font-size: 1.15rem;
+    line-height: 1.1;
+  }
+
+  &__sub {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: $ex-teal;
+  }
+
+  &--light {
+    color: #fff;
+
+    .ex-brand__sub {
+      color: $ex-teal-light;
+    }
+  }
+}
+
+// ---------------------------------------------------------------- Hero
+.ex-hero {
+  position: relative;
+  overflow: hidden;
+  padding-block: 5rem 6rem;
+  color: rgba(255, 255, 255, 0.86);
+  background:
+    radial-gradient(60rem 30rem at 85% 10%, rgba($ex-teal, 0.45), transparent 60%),
+    radial-gradient(40rem 25rem at 0% 100%, rgba($ex-amber, 0.16), transparent 60%),
+    linear-gradient(160deg, $ex-navy 0%, $ex-navy-700 100%);
+
+  @include media-breakpoint-up(lg) {
+    padding-block: 7rem 8rem;
+  }
+
+  h1 {
+    color: #fff;
+  }
+
+  &__lead {
+    max-width: 38rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.ex-hero-stack {
+  display: grid;
+  gap: 1rem;
+  max-width: 24rem;
+  margin-inline: auto;
+}
+
+.ex-hero-tile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: $border-radius-lg;
+  backdrop-filter: blur(6px);
+  color: #fff;
+
+  strong {
+    display: block;
+    font-family: $headings-font-family;
+    font-weight: 600;
+  }
+
+  small {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  &--1 {
+    margin-left: 2rem;
+  }
+}
+
+// ---------------------------------------------------------------- Inner page header
+.ex-page-header {
+  padding-block: 4rem 3.5rem;
+  color: rgba(255, 255, 255, 0.82);
+  background:
+    radial-gradient(40rem 20rem at 90% 0%, rgba($ex-teal, 0.4), transparent 60%),
+    linear-gradient(160deg, $ex-navy 0%, $ex-navy-700 100%);
+
+  h1 {
+    color: #fff;
+  }
+
+  p {
+    max-width: 42rem;
+  }
+}
+
+// ---------------------------------------------------------------- Building blocks
+.ex-icon-badge {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.85rem;
+  font-size: 1.35rem;
+  color: $ex-teal;
+  background: rgba($ex-teal, 0.1);
+
+  &--lg {
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.8rem;
+    border-radius: 1.1rem;
+  }
+
+  &--amber {
+    color: darken($ex-amber, 25%);
+    background: rgba($ex-amber, 0.18);
+  }
+
+  .ex-hero & {
+    color: $ex-navy;
+    background: $ex-teal-light;
+  }
+}
+
+.ex-card {
+  height: 100%;
+  padding: 2rem;
+  background: #fff;
+  border: 1px solid rgba($ex-navy, 0.08);
+  border-radius: $border-radius-lg;
+  box-shadow: var(--ex-shadow);
+  transition:
+    transform 0.25s var(--ex-ease),
+    box-shadow 0.25s var(--ex-ease);
+
+  &--hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--ex-shadow-lg);
+  }
+}
+
+.ex-checklist {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    padding-left: 1.75rem;
+    margin-bottom: 0.6rem;
+
+    &::before {
+      content: '\F26E'; // bi-check2
+      position: absolute;
+      left: 0;
+      top: 0.05rem;
+      font-family: 'bootstrap-icons';
+      font-weight: 700;
+      color: $ex-teal;
+    }
+  }
+}
+
+.ex-trust {
+  border-bottom: 1px solid rgba($ex-navy, 0.06);
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    color: $ex-navy;
+
+    i {
+      font-size: 1.4rem;
+      color: $ex-teal;
+    }
+  }
+}
+
+.ex-step {
+  position: relative;
+  height: 100%;
+  padding: 1.75rem;
+  background: #fff;
+  border-radius: $border-radius-lg;
+  border: 1px solid rgba($ex-navy, 0.08);
+
+  &__num {
+    display: inline-grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    font-family: $headings-font-family;
+    font-weight: 700;
+    color: #fff;
+    background: $ex-teal;
+  }
+}
+
+.ex-quote {
+  padding: 2.5rem;
+  border-radius: $border-radius-xl;
+  color: #fff;
+  background: linear-gradient(135deg, $ex-teal 0%, darken($ex-teal, 12%) 100%);
+
+  p {
+    font-family: $headings-font-family;
+    font-size: 1.35rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+}
+
+// ---------------------------------------------------------------- CTA band
+.ex-cta {
+  padding: 3rem 2rem;
+  border-radius: $border-radius-xl;
+  color: rgba(255, 255, 255, 0.85);
+  background:
+    radial-gradient(30rem 15rem at 100% 0%, rgba($ex-teal, 0.5), transparent 60%),
+    $ex-navy;
+
+  @include media-breakpoint-up(lg) {
+    padding: 4rem;
+  }
+
+  h2 {
+    color: #fff;
+  }
+}
+
+// ---------------------------------------------------------------- Portfolio
+.ex-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ex-chip {
+  padding: 0.5rem 1.1rem;
+  border: 1px solid rgba($ex-navy, 0.15);
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: $ex-navy;
+  background: #fff;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+
+  &:hover {
+    border-color: $ex-teal;
+    color: $ex-teal;
+  }
+
+  &.active {
+    color: #fff;
+    background: $ex-navy;
+    border-color: $ex-navy;
+  }
+}
+
+.ex-masonry {
+  column-gap: 1.5rem;
+  columns: 1;
+
+  @include media-breakpoint-up(sm) {
+    columns: 2;
+  }
+
+  @include media-breakpoint-up(lg) {
+    columns: 3;
+  }
+
+  > * {
+    display: block;
+    margin-bottom: 1.5rem;
+    break-inside: avoid;
+  }
+}
+
+.ex-project-card {
+  display: block;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba($ex-navy, 0.08);
+  border-radius: $border-radius-lg;
+  box-shadow: var(--ex-shadow);
+  color: inherit;
+  text-decoration: none !important;
+  transition:
+    transform 0.25s var(--ex-ease),
+    box-shadow 0.25s var(--ex-ease);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--ex-shadow-lg);
+
+    img,
+    video {
+      transform: scale(1.04);
+    }
+  }
+
+  &__media {
+    position: relative;
+    overflow: hidden;
+    background: $ex-sand;
+
+    img,
+    video {
+      object-fit: cover;
+      pointer-events: none;
+      transition: transform 0.5s var(--ex-ease);
+    }
+  }
+
+  &__placeholder {
+    display: grid;
+    place-items: center;
+    font-size: 2.5rem;
+    color: rgba(255, 255, 255, 0.85);
+    background: linear-gradient(140deg, $ex-navy-700, $ex-teal);
+  }
+
+  &__body {
+    padding: 1.1rem 1.25rem 1.25rem;
+  }
+
+  h3 {
+    margin: 0.5rem 0 0.15rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+}
+
+.ex-play {
+  position: absolute;
+  inset: auto auto 0.85rem 0.85rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  color: $ex-navy;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.ex-badge-cat {
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $ex-teal;
+  background: rgba($ex-teal, 0.1);
+}
+
+.ex-skeleton {
+  border-radius: $border-radius-lg;
+  background: linear-gradient(90deg, #eef0f3 25%, #f6f7f9 50%, #eef0f3 75%);
+  background-size: 200% 100%;
+  animation: ex-shimmer 1.4s infinite linear;
+}
+
+@keyframes ex-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.ex-empty {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  border: 2px dashed rgba($ex-navy, 0.12);
+  border-radius: $border-radius-xl;
+  color: $ex-muted;
+
+  i {
+    font-size: 2.5rem;
+    color: $ex-teal;
+  }
+}
+
+// ---------------------------------------------------------------- Media
+.ex-media-frame {
+  overflow: hidden;
+  border-radius: $border-radius-lg;
+  background: #000;
+  box-shadow: var(--ex-shadow);
+
+  video,
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  &--portrait {
+    max-width: 24rem;
+    margin-inline: auto;
+  }
+}
+
+.ex-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.75rem;
+
+  button {
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: $border-radius;
+    background: $ex-sand;
+    cursor: zoom-in;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s var(--ex-ease);
+    }
+
+    &:hover img {
+      transform: scale(1.05);
+    }
+  }
+}
+
+.ex-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 1rem;
+  background: rgba(6, 16, 30, 0.92);
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: $border-radius;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  }
+
+  &__btn {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: 0;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    &--close {
+      top: 1rem;
+      right: 1rem;
+    }
+
+    &--prev {
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    &--next {
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  }
+
+  &__count {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.9rem;
+  }
+}
+
+.ex-tool {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  margin: 0 0.35rem 0.35rem 0;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: $ex-navy;
+  background: $ex-sand;
+}
+
+// ---------------------------------------------------------------- Footer
+.ex-footer {
+  padding-block: 4rem 2rem;
+  color: rgba(255, 255, 255, 0.72);
+  background: $ex-navy;
+
+  h2 {
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  a {
+    color: rgba(255, 255, 255, 0.72);
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  ul {
+    padding: 0;
+    list-style: none;
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  &__bottom {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.875rem;
+  }
+}
+
+.ex-social {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+
+  &:hover {
+    background: $ex-teal;
+  }
+}

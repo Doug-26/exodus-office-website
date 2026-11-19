@@ -1,0 +1,61 @@
+// ---------------------------------------------------------------------------
+// Exodus Home Office brand tokens + Bootstrap overrides.
+// Change the brand colors here and the whole site (Bootstrap included) follows.
+// ---------------------------------------------------------------------------
+
+$ex-navy: #0d2340;
+$ex-navy-700: #163a63;
+$ex-teal: #0a7c7d;
+$ex-teal-light: #5fd0cb;
+$ex-amber: #f2a93b;
+$ex-ink: #172030;
+$ex-muted: #566174;
+$ex-sand: #f6f4ef;
+
+// Bootstrap theme colors
+$primary: $ex-teal;
+$secondary: $ex-navy-700;
+$warning: $ex-amber;
+$dark: $ex-navy;
+$light: $ex-sand;
+
+$body-color: $ex-ink;
+$body-bg: #ffffff;
+$headings-color: $ex-navy;
+
+// Typography
+$font-family-sans-serif:
+  'Inter',
+  system-ui,
+  -apple-system,
+  'Segoe UI',
+  Roboto,
+  'Helvetica Neue',
+  Arial,
+  sans-serif;
+$headings-font-family: 'Poppins', $font-family-sans-serif;
+$headings-font-weight: 700;
+$lead-font-weight: 400;
+
+// Shape
+$border-radius: 0.625rem;
+$border-radius-sm: 0.5rem;
+$border-radius-lg: 1rem;
+$border-radius-xl: 1.5rem;
+
+// Components
+$btn-padding-y: 0.65rem;
+$btn-padding-x: 1.4rem;
+$btn-font-weight: 600;
+$btn-padding-y-lg: 0.8rem;
+$btn-padding-x-lg: 1.75rem;
+$btn-font-size-lg: 1.05rem;
+$input-padding-y: 0.65rem;
+$input-padding-x: 0.9rem;
+$card-border-color: rgba($ex-navy, 0.08);
+$link-decoration: none;
+$link-hover-decoration: underline;
+$navbar-nav-link-padding-x: 0.9rem;
+
+// Calmer loading spinners (Bootstrap default is 0.75s per turn).
+$spinner-animation-speed: 3s;

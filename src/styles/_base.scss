@@ -1,0 +1,101 @@
+:root {
+  --ex-navy: #{$ex-navy};
+  --ex-navy-700: #{$ex-navy-700};
+  --ex-teal: #{$ex-teal};
+  --ex-teal-light: #{$ex-teal-light};
+  --ex-amber: #{$ex-amber};
+  --ex-ink: #{$ex-ink};
+  --ex-muted: #{$ex-muted};
+  --ex-sand: #{$ex-sand};
+  --ex-shadow: 0 10px 30px rgba(13, 35, 64, 0.08);
+  --ex-shadow-lg: 0 24px 60px rgba(13, 35, 64, 0.16);
+  --ex-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+.display-4,
+.display-5,
+.display-6 {
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+:focus-visible {
+  outline: 3px solid rgba($ex-teal, 0.55);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 2000;
+  padding: 0.5rem 1rem;
+  background: $ex-navy;
+  color: #fff;
+  border-radius: $border-radius;
+  transition: top 0.15s;
+
+  &:focus {
+    top: 1rem;
+  }
+}
+
+.ex-eyebrow {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-family: $headings-font-family;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: $ex-teal;
+
+  &--light {
+    color: $ex-teal-light;
+  }
+}
+
+.ex-lead {
+  font-size: 1.125rem;
+  color: $ex-muted;
+}
+
+.ex-section {
+  padding-block: 4rem;
+
+  @include media-breakpoint-up(lg) {
+    padding-block: 6rem;
+  }
+}
+
+.ex-bg-sand {
+  background-color: $ex-sand;
+}
+
+.ex-prose {
+  white-space: pre-line;
+  color: $ex-ink;
+  line-height: 1.75;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
