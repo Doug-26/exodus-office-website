@@ -1,5 +1,5 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { form, FormField, FormRoot, validate } from '@angular/forms/signals';
 import { MAX_UPLOAD_BYTES } from '../../core/supabase';
 import { MediaService } from '../../data/media.service';
 import { ASPECTS, MediaAspect, ProjectMedia } from '../../data/models';
@@ -13,10 +13,17 @@ interface UploadItem {
   error?: string;
 }
 
+interface LinkModel {
+  url: string;
+  aspect: MediaAspect;
+}
+
+const EMPTY_LINK: LinkModel = { url: '', aspect: '16:9' };
+
 /** Lists, uploads, links, reorders and deletes the media of one project. */
 @Component({
   selector: 'app-media-manager',
-  imports: [FormsModule],
+  imports: [FormField, FormRoot],
   templateUrl: './media-manager.html',
 })
 export class MediaManager implements OnInit {
@@ -35,9 +42,29 @@ export class MediaManager implements OnInit {
   protected readonly uploads = signal<UploadItem[]>([]);
   protected readonly dragOver = signal(false);
 
-  protected linkUrl = '';
-  protected linkAspect: MediaAspect = '16:9';
-  protected readonly linkError = signal('');
+  private readonly linkModel = signal<LinkModel>({ ...EMPTY_LINK });
+  protected readonly linkForm = form(
+    this.linkModel,
+    (link) => {
+      validate(link.url, ({ value }) => {
+        const url = value().trim();
+        if (!url || parseVideoUrl(url)) return null;
+        return {
+          kind: 'videoUrl',
+          message: /fb\.watch|facebook\.com\/share\//i.test(url)
+            ? 'Facebook short/share links hide the video ID. Open the link, then copy the address from the browser bar (it contains /reel/ or /videos/ followed by numbers).'
+            : 'Please paste a valid YouTube, Vimeo, or Facebook video/Reel link.',
+        };
+      });
+    },
+    { submission: { action: () => this.addLink() } },
+  );
+  /** Shown once the field has been left or submitted, so typing isn't interrupted. */
+  protected readonly linkError = computed(() => {
+    const url = this.linkForm.url();
+    return url.touched() && url.invalid() ? (url.errors()[0]?.message ?? '') : '';
+  });
+  protected readonly canAddLink = computed(() => !this.busy() && !!this.linkForm.url().value().trim());
 
   async ngOnInit(): Promise<void> {
     try {
@@ -129,38 +156,33 @@ export class MediaManager implements OnInit {
 
   // ------------------------------------------------------------ Video links
 
-  protected onLinkChange(): void {
-    this.linkError.set('');
-    if (parseVideoUrl(this.linkUrl)?.isVertical) this.linkAspect = '9:16';
+  /** Reels/Shorts links switch the shape to vertical automatically. */
+  protected onLinkInput(url: string): void {
+    if (parseVideoUrl(url)?.isVertical) this.linkForm.aspect().value.set('9:16');
   }
 
-  protected async addLink(): Promise<void> {
-    const parsed = parseVideoUrl(this.linkUrl);
-    if (!parsed) {
-      this.linkError.set(
-        /fb\.watch|facebook\.com\/share\//i.test(this.linkUrl)
-          ? 'Facebook short/share links hide the video ID. Open the link, then copy the address from the browser bar (it contains /reel/ or /videos/ followed by numbers).'
-          : 'Please paste a valid YouTube, Vimeo, or Facebook video/Reel link.',
-      );
-      return;
-    }
+  /** Submission action of `linkForm`; only runs when the link is valid. */
+  private async addLink(): Promise<undefined> {
+    const { url, aspect } = this.linkModel();
+    if (!url.trim() || this.busy()) return;
     await this.run(async () => {
       const row = await this.media.add({
         project_id: this.projectId(),
         type: 'video_embed',
-        embed_url: this.linkUrl.trim(),
-        aspect: this.linkAspect,
+        embed_url: url.trim(),
+        aspect,
         sort_order: this.items().length,
       });
       this.items.update((list) => [...list, row]);
-      this.linkUrl = '';
-      this.linkAspect = '16:9';
+      this.linkForm().reset({ ...EMPTY_LINK });
     });
   }
 
   // ------------------------------------------------------------ Edit existing
 
-  protected async setAspect(m: ProjectMedia, aspect: MediaAspect): Promise<void> {
+  protected async setAspect(m: ProjectMedia, value: string): Promise<void> {
+    const aspect = ASPECTS.find((a) => a.value === value)?.value;
+    if (!aspect || aspect === m.aspect) return;
     await this.run(async () => {
       await this.media.update(m.id, { aspect });
       this.patchItem(m.id, { aspect });

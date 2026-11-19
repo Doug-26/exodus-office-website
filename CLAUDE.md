@@ -19,6 +19,8 @@ npx ng test --watch=false      # single run (CI-style)
 npx prettier --write <files>   # formatting (printWidth 100, single quotes, angular parser for .html)
 ```
 
+**All Angular code must follow the team's Angular best practices:** @.claude/angular-best-practices.md
+
 There is no ESLint setup. Specs use Vitest globals (`describe`/`it`/`expect`, see [tsconfig.spec.json](tsconfig.spec.json)), not Jasmine.
 
 Production build budgets ([angular.json](angular.json)): initial bundle warns at 800 kB / errors at 1.2 MB; **per-component styles warn at 6 kB / error at 10 kB**. Put larger styles in `src/styles/` instead of component `styles`.

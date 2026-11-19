@@ -1,9 +1,9 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { Supabase } from '../core/supabase';
 import { Inquiry, InquiryInput, InquiryStatus } from './models';
 import { friendlyError } from './projects.service';
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class InquiriesService {
   private readonly sb = inject(Supabase);
 

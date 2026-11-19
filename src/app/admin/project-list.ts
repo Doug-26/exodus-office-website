@@ -12,18 +12,18 @@ import { ProjectsService } from '../data/projects.service';
         <h1 class="h3 mb-1">Projects</h1>
         <p class="text-body-secondary mb-0 small">Only <strong>published</strong> projects appear on the website. <strong>Featured</strong> ones also show on the home page.</p>
       </div>
-      <a class="btn btn-primary" routerLink="/admin/projects/new"><i class="bi bi-plus-lg me-1"></i> New project</a>
+      <a class="btn btn-primary" routerLink="/admin/projects/new"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i> New project</a>
     </div>
 
     @if (error()) {
-      <div class="alert alert-danger">{{ error() }}</div>
+      <div class="alert alert-danger" role="alert">{{ error() }}</div>
     }
 
     @if (loading()) {
       <div class="text-center py-5"><span class="spinner-border text-primary" role="status" aria-label="Loading"></span></div>
     } @else if (!projects().length) {
       <div class="ex-empty bg-white">
-        <i class="bi bi-collection d-block mb-3"></i>
+        <i class="bi bi-collection d-block mb-3" aria-hidden="true"></i>
         <h2 class="h5 text-body">No projects yet</h2>
         <p>Add your first video, reel, or design to start building the portfolio.</p>
         <a class="btn btn-primary" routerLink="/admin/projects/new">Add a project</a>
@@ -47,8 +47,8 @@ import { ProjectsService } from '../data/projects.service';
                 <tr>
                   <td>
                     <div class="btn-group-vertical btn-group-sm">
-                      <button type="button" class="btn btn-light" [disabled]="first || busy()" (click)="move(i, -1)" aria-label="Move up"><i class="bi bi-chevron-up"></i></button>
-                      <button type="button" class="btn btn-light" [disabled]="last || busy()" (click)="move(i, 1)" aria-label="Move down"><i class="bi bi-chevron-down"></i></button>
+                      <button type="button" class="btn btn-light" [disabled]="first || busy()" (click)="move(i, -1)" [attr.aria-label]="'Move ' + p.title + ' up'"><i class="bi bi-chevron-up" aria-hidden="true"></i></button>
+                      <button type="button" class="btn btn-light" [disabled]="last || busy()" (click)="move(i, 1)" [attr.aria-label]="'Move ' + p.title + ' down'"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
                     </div>
                   </td>
                   <td>
@@ -59,7 +59,7 @@ import { ProjectsService } from '../data/projects.service';
                         } @else if (svc.previewVideoUrl(p); as video) {
                           <video [src]="video" muted playsinline preload="metadata" aria-hidden="true"></video>
                         } @else {
-                          <i class="bi bi-image"></i>
+                          <i class="bi bi-image" aria-hidden="true"></i>
                         }
                       </div>
                       <div>
@@ -81,10 +81,10 @@ import { ProjectsService } from '../data/projects.service';
                   </td>
                   <td class="text-end text-nowrap">
                     @if (p.is_published) {
-                      <a class="btn btn-sm btn-light" [routerLink]="['/portfolio', p.slug]" target="_blank" aria-label="View on site"><i class="bi bi-eye"></i></a>
+                      <a class="btn btn-sm btn-light" [routerLink]="['/portfolio', p.slug]" target="_blank" rel="noopener" [attr.aria-label]="'View ' + p.title + ' on site (opens in new tab)'"><i class="bi bi-eye" aria-hidden="true"></i></a>
                     }
-                    <a class="btn btn-sm btn-light ms-1" [routerLink]="['/admin/projects', p.id]" aria-label="Edit"><i class="bi bi-pencil"></i></a>
-                    <button type="button" class="btn btn-sm btn-light text-danger ms-1" [disabled]="busy()" (click)="remove(p)" aria-label="Delete"><i class="bi bi-trash"></i></button>
+                    <a class="btn btn-sm btn-light ms-1" [routerLink]="['/admin/projects', p.id]" [attr.aria-label]="'Edit ' + p.title"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                    <button type="button" class="btn btn-sm btn-light text-danger ms-1" [disabled]="busy()" (click)="remove(p)" [attr.aria-label]="'Delete ' + p.title"><i class="bi bi-trash" aria-hidden="true"></i></button>
                   </td>
                 </tr>
               }

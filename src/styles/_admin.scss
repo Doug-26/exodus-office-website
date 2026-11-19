@@ -84,6 +84,19 @@
   }
 }
 
+// Labels that wrap a visually hidden file input: keep the input anchored inside the label
+// (so focusing it doesn't scroll elsewhere) and show its keyboard focus on the label.
+.ex-dropzone,
+.ex-file-btn {
+  position: relative;
+}
+
+.ex-dropzone:has(input:focus-visible),
+.ex-file-btn:has(input:focus-visible) {
+  outline: 3px solid rgba($ex-teal, 0.55);
+  outline-offset: 2px;
+}
+
 .ex-inquiry {
   cursor: pointer;
 

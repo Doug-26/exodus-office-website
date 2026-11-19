@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SERVICES } from '../data/services.data';
@@ -5,14 +6,14 @@ import { ACTIVE_SOCIALS, SITE } from '../site.config';
 
 @Component({
   selector: 'app-footer',
-  imports: [RouterLink],
+  imports: [NgOptimizedImage, RouterLink],
   template: `
     <footer class="ex-footer">
       <div class="container">
         <div class="row g-4 g-lg-5">
           <div class="col-lg-4">
             <a class="ex-brand ex-brand--light mb-3" routerLink="/">
-              <img src="logo.svg" alt="" width="40" height="40" />
+              <img ngSrc="logo.svg" alt="" width="40" height="40" />
               <span>
                 <span class="ex-brand__name">Exodus</span>
                 <span class="ex-brand__sub">Home Office</span>
@@ -22,7 +23,7 @@ import { ACTIVE_SOCIALS, SITE } from '../site.config';
             @if (socials.length) {
               <div class="d-flex gap-2">
                 @for (s of socials; track s.label) {
-                  <a class="ex-social" [href]="s.url" target="_blank" rel="noopener" [attr.aria-label]="s.label">
+                  <a class="ex-social" [href]="s.url" target="_blank" rel="noopener" [attr.aria-label]="s.label + ' (opens in new tab)'">
                     <i class="bi {{ s.icon }}" aria-hidden="true"></i>
                   </a>
                 }

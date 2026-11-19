@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import type { PostgrestError } from '@supabase/supabase-js';
 import { MEDIA_BUCKET, Supabase } from '../core/supabase';
 import { parseVideoUrl } from '../shared/utils/video-url';
@@ -19,7 +19,7 @@ function sortMedia(p: Project): Project {
   return p;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class ProjectsService {
   private readonly sb = inject(Supabase);
 

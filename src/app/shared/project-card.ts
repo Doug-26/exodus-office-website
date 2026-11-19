@@ -39,7 +39,7 @@ export class ProjectCard {
 
   protected readonly cover = computed(() => this.projects.coverUrl(this.project()));
   protected readonly previewVideo = computed(() => this.projects.previewVideoUrl(this.project()));
-  protected readonly hasVideo =computed(() => this.projects.hasVideo(this.project()));
+  protected readonly hasVideo = computed(() => this.projects.hasVideo(this.project()));
   protected readonly category = computed(() => categoryInfo(this.project().category));
   /** Vertical work (reels) gets a portrait card; everything else stays landscape. */
   protected readonly ratio = computed(() => {

@@ -1,10 +1,10 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { MAX_UPLOAD_BYTES, MEDIA_BUCKET, Supabase } from '../core/supabase';
 import { NewMedia, ProjectMedia } from './models';
 import { friendlyError } from './projects.service';
 
 /** Uploads files to Supabase Storage and manages `project_media` rows (admin only). */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class MediaService {
   private readonly sb = inject(Supabase);
 

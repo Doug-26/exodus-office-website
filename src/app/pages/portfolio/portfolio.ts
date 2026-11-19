@@ -37,7 +37,7 @@ import { ProjectCard } from '../../shared/project-card';
             }
           </div>
         } @else if (error()) {
-          <div class="alert alert-danger">{{ error() }}</div>
+          <div class="alert alert-danger" role="alert">{{ error() }}</div>
         } @else if (visible().length) {
           <div class="ex-masonry">
             @for (p of visible(); track p.id) {

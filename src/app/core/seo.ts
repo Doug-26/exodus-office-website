@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 import { SITE } from '../site.config';
@@ -10,7 +10,7 @@ export interface SeoData {
   noindex?: boolean;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class SeoService {
   private readonly titleSvc = inject(Title);
   private readonly meta = inject(Meta);
@@ -33,7 +33,7 @@ export class SeoService {
 }
 
 /** Sets <title>, description and robots meta from each route's `title` and `data`. */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class SeoTitleStrategy extends TitleStrategy {
   private readonly seo = inject(SeoService);
 

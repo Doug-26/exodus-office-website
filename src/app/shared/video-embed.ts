@@ -25,12 +25,16 @@ import { parseVideoUrl } from './utils/video-url';
         <p class="small text-center text-body-secondary mt-2 mb-0">
           Video not loading?
           <a [href]="parsed()!.watchUrl" target="_blank" rel="noopener">
-            Watch on Facebook <i class="bi bi-box-arrow-up-right"></i>
+            Watch on Facebook <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i
+            ><span class="visually-hidden"> (opens in new tab)</span>
           </a>
         </p>
       }
     } @else {
-      <a [href]="url()" target="_blank" rel="noopener">Watch the video <i class="bi bi-box-arrow-up-right"></i></a>
+      <a [href]="url()" target="_blank" rel="noopener"
+        >Watch the video <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i
+        ><span class="visually-hidden"> (opens in new tab)</span></a
+      >
     }
   `,
 })

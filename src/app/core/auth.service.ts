@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Service, signal } from '@angular/core';
 import type { Session } from '@supabase/supabase-js';
 import { Supabase } from './supabase';
 
@@ -6,7 +6,7 @@ import { Supabase } from './supabase';
  * Admin authentication. Anyone can have a Supabase account, but only users
  * listed in the `admins` table are treated as admins (enforced again by RLS).
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class AuthService {
   private readonly sb = inject(Supabase);
 

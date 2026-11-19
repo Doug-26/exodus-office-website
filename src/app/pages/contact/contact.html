@@ -111,7 +111,7 @@
               <h2 class="h6 mb-3">Follow us</h2>
               <div class="d-flex gap-2">
                 @for (s of socials; track s.label) {
-                  <a class="btn btn-outline-secondary" [href]="s.url" target="_blank" rel="noopener" [attr.aria-label]="s.label">
+                  <a class="btn btn-outline-secondary" [href]="s.url" target="_blank" rel="noopener" [attr.aria-label]="s.label + ' (opens in new tab)'">
                     <i class="bi {{ s.icon }}" aria-hidden="true"></i>
                   </a>
                 }

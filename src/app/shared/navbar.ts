@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter } from 'rxjs';
@@ -5,12 +6,12 @@ import { SITE } from '../site.config';
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [NgOptimizedImage, RouterLink, RouterLinkActive],
   template: `
     <nav class="navbar navbar-expand-lg sticky-top ex-navbar py-3" aria-label="Main navigation">
       <div class="container">
         <a class="ex-brand" routerLink="/" aria-label="{{ site.name }}, home">
-          <img src="logo.svg" alt="" width="40" height="40" />
+          <img ngSrc="logo.svg" alt="" width="40" height="40" priority />
           <span>
             <span class="ex-brand__name">Exodus</span>
             <span class="ex-brand__sub">Home Office</span>

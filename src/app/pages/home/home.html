@@ -18,7 +18,7 @@
         <div class="ex-hero-stack" aria-hidden="true">
           @for (s of services; track s.id) {
             <div class="ex-hero-tile ex-hero-tile--{{ $index }}">
-              <span class="ex-icon-badge"><i class="bi {{ s.icon }}"></i></span>
+              <span class="ex-icon-badge"><i class="bi {{ s.icon }}" aria-hidden="true"></i></span>
               <div>
                 <strong>{{ s.title }}</strong>
                 <small>{{ s.tagline }}</small>

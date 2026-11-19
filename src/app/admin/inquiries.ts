@@ -16,7 +16,7 @@ type Filter = InquiryStatus | 'all';
       </div>
       <div class="btn-group" role="group" aria-label="Filter inquiries">
         @for (f of filters; track f.value) {
-          <button type="button" class="btn btn-sm" [class.btn-primary]="filter() === f.value" [class.btn-outline-primary]="filter() !== f.value" (click)="filter.set(f.value)">
+          <button type="button" class="btn btn-sm" [class.btn-primary]="filter() === f.value" [class.btn-outline-primary]="filter() !== f.value" [attr.aria-pressed]="filter() === f.value" (click)="filter.set(f.value)">
             {{ f.label }}
             @if (f.value === 'new' && newCount()) {
               <span class="badge text-bg-warning ms-1">{{ newCount() }}</span>
@@ -27,14 +27,14 @@ type Filter = InquiryStatus | 'all';
     </div>
 
     @if (error()) {
-      <div class="alert alert-danger">{{ error() }}</div>
+      <div class="alert alert-danger" role="alert">{{ error() }}</div>
     }
 
     @if (loading()) {
       <div class="text-center py-5"><span class="spinner-border text-primary" role="status" aria-label="Loading"></span></div>
     } @else if (!visible().length) {
       <div class="ex-empty bg-white">
-        <i class="bi bi-inbox d-block mb-3"></i>
+        <i class="bi bi-inbox d-block mb-3" aria-hidden="true"></i>
         <p class="mb-0">No {{ filter() === 'all' ? '' : filter() }} inquiries.</p>
       </div>
     } @else {
@@ -43,25 +43,25 @@ type Filter = InquiryStatus | 'all';
           <article class="card border-0 shadow-sm ex-inquiry" [class.is-new]="q.status === 'new'">
             <div class="card-body p-4">
               <button type="button" class="btn p-0 w-100 text-start border-0" (click)="toggle(q)" [attr.aria-expanded]="openId() === q.id">
-                <div class="d-flex flex-wrap justify-content-between gap-2">
-                  <div>
+                <span class="d-flex flex-wrap justify-content-between gap-2">
+                  <span>
                     <strong>{{ q.name }}</strong>
                     <span class="text-body-secondary ms-2 small">{{ q.email }}</span>
                     @if (q.service) {
                       <span class="badge ex-badge-cat ms-2">{{ q.service }}</span>
                     }
-                  </div>
+                  </span>
                   <span class="small text-body-secondary">{{ q.created_at | date: 'medium' }}</span>
-                </div>
+                </span>
                 @if (openId() !== q.id) {
-                  <p class="text-body-secondary small mb-0 mt-2 text-truncate">{{ q.message }}</p>
+                  <span class="d-block text-body-secondary small mt-2 text-truncate">{{ q.message }}</span>
                 }
               </button>
 
               @if (openId() === q.id) {
                 <p class="ex-prose mt-3">{{ q.message }}</p>
                 <div class="d-flex flex-wrap gap-2">
-                  <a class="btn btn-sm btn-primary" [href]="replyLink(q)"><i class="bi bi-reply me-1"></i>Reply by email</a>
+                  <a class="btn btn-sm btn-primary" [href]="replyLink(q)"><i class="bi bi-reply me-1" aria-hidden="true"></i>Reply by email</a>
                   @if (q.status !== 'archived') {
                     <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy()" (click)="setStatus(q, 'archived')">Archive</button>
                   } @else {

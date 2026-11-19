@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -7,12 +8,12 @@ import { withMinDuration } from '../shared/utils/min-duration';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [NgOptimizedImage, ReactiveFormsModule, RouterLink],
   template: `
     <div class="ex-auth">
       <div class="card p-4 p-sm-5">
         <div class="text-center mb-4">
-          <img src="logo.svg" alt="" width="56" height="56" class="mb-3" />
+          <img ngSrc="logo.svg" alt="" width="56" height="56" class="mb-3" />
           <h1 class="h4 mb-1">Admin sign in</h1>
           <p class="text-body-secondary small mb-0">Exodus Home Office</p>
         </div>

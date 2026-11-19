@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 
@@ -13,7 +13,7 @@ export class SupabaseNotConfiguredError extends Error {
 }
 
 /** Single shared Supabase client, created lazily on first use. */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class Supabase {
   readonly url = environment.supabaseUrl.replace(/\/+$/, '');
   readonly anonKey = environment.supabaseAnonKey;

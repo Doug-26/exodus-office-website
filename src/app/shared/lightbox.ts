@@ -11,7 +11,7 @@ export interface LightboxImage {
   host: { '(document:keydown)': 'onKey($event)' },
   template: `
     @if (current(); as img) {
-      <div class="ex-lightbox" role="dialog" aria-modal="true" aria-label="Image viewer" (click)="close()">
+      <div #dialog class="ex-lightbox" role="dialog" aria-modal="true" aria-label="Image viewer" (click)="close()">
         <img [src]="img.src" [alt]="img.alt" (click)="$event.stopPropagation()" />
         <button #closeBtn class="ex-lightbox__btn ex-lightbox__btn--close" type="button" aria-label="Close" (click)="close()">
           <i class="bi bi-x-lg" aria-hidden="true"></i>
@@ -33,14 +33,29 @@ export class Lightbox {
   readonly images = input.required<LightboxImage[]>();
   readonly index = model<number | null>(null);
 
+  private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
   private readonly closeBtn = viewChild<ElementRef<HTMLButtonElement>>('closeBtn');
+  /** Element that had focus before the viewer opened; focus returns to it on close. */
+  private opener: HTMLElement | null = null;
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => (document.body.style.overflow = ''));
+    inject(DestroyRef).onDestroy(() => {
+      document.body.style.overflow = '';
+      this.opener?.focus();
+    });
     effect(() => {
-      const isOpen = this.index() !== null;
-      document.body.style.overflow = isOpen ? 'hidden' : '';
-      if (isOpen) this.closeBtn()?.nativeElement.focus();
+      document.body.style.overflow = this.index() !== null ? 'hidden' : '';
+    });
+    // The close button only exists while the viewer is rendered, so it marks open/close.
+    effect(() => {
+      const btn = this.closeBtn()?.nativeElement;
+      if (btn) {
+        this.opener ??= document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        btn.focus();
+      } else if (this.opener) {
+        this.opener.focus();
+        this.opener = null;
+      }
     });
   }
 
@@ -66,5 +81,23 @@ export class Lightbox {
     if (e.key === 'Escape') this.close();
     else if (e.key === 'ArrowRight') this.step(1);
     else if (e.key === 'ArrowLeft') this.step(-1);
+    else if (e.key === 'Tab') this.trapFocus(e);
+  }
+
+  /** Keeps Tab / Shift+Tab cycling through the viewer's buttons while it is open. */
+  private trapFocus(e: KeyboardEvent): void {
+    const buttons = Array.from(this.dialog()?.nativeElement.querySelectorAll('button') ?? []);
+    if (!buttons.length) return;
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+    const active = document.activeElement;
+    const inside = buttons.some((b) => b === active);
+    if (e.shiftKey && (active === first || !inside)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (active === last || !inside)) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 }
