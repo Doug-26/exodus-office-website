@@ -5,6 +5,8 @@ export interface ParsedVideo {
   id: string;
   /** Safe-to-embed player URL built from the validated id only. */
   embedUrl: string;
+  /** Link to the video on the provider's own site, also rebuilt from the validated id. */
+  watchUrl: string;
   /** Public thumbnail when the provider offers one without an API key (YouTube only). */
   thumbnailUrl: string | null;
   /** True for vertical formats: YouTube Shorts and Facebook Reels. */
@@ -57,6 +59,7 @@ export function parseVideoUrl(raw: string | null | undefined): ParsedVideo | nul
       provider: 'youtube',
       id: ytId,
       embedUrl: `https://www.youtube-nocookie.com/embed/${ytId}?rel=0`,
+      watchUrl: `https://www.youtube.com/watch?v=${ytId}`,
       thumbnailUrl: `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`,
       isVertical: isShort,
     };
@@ -75,6 +78,7 @@ export function parseVideoUrl(raw: string | null | undefined): ParsedVideo | nul
       provider: 'vimeo',
       id,
       embedUrl: `https://player.vimeo.com/video/${id}${safeHash ? `?h=${safeHash}` : ''}`,
+      watchUrl: `https://vimeo.com/${id}${safeHash ? `/${safeHash}` : ''}`,
       thumbnailUrl: null,
       isVertical: false,
     };
@@ -86,12 +90,14 @@ export function parseVideoUrl(raw: string | null | undefined): ParsedVideo | nul
     if (!id) return null;
     // Rebuilt from the numeric id so nothing user-supplied reaches the iframe.
     const href = `https://www.facebook.com/watch/?v=${id}`;
+    const isReel = parts[0] === 'reel' || parts[0] === 'reels';
     return {
       provider: 'facebook',
       id,
       embedUrl: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(href)}&show_text=false`,
+      watchUrl: isReel ? `https://www.facebook.com/reel/${id}` : href,
       thumbnailUrl: null,
-      isVertical: parts[0] === 'reel' || parts[0] === 'reels',
+      isVertical: isReel,
     };
   }
 

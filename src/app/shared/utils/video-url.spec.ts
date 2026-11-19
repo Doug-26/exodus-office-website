@@ -19,6 +19,7 @@ describe('parseVideoUrl', () => {
     expect(v?.embedUrl).toBe(`https://www.youtube-nocookie.com/embed/${ID}?rel=0`);
     expect(v?.thumbnailUrl).toBe(`https://i.ytimg.com/vi/${ID}/hqdefault.jpg`);
     expect(v?.isVertical).toBe(false);
+    expect(v?.watchUrl).toBe(`https://www.youtube.com/watch?v=${ID}`);
   });
 
   it('flags YouTube Shorts as vertical', () => {
@@ -49,6 +50,9 @@ describe('parseVideoUrl', () => {
       expect(v?.embedUrl).toBe(embed);
       expect(v?.thumbnailUrl).toBeNull();
       expect(v?.isVertical).toBe(vertical);
+      expect(v?.watchUrl).toBe(
+        vertical ? `https://www.facebook.com/reel/${FB}` : `https://www.facebook.com/watch/?v=${FB}`,
+      );
     });
 
     it.each([

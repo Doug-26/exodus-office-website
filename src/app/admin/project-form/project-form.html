@@ -79,7 +79,10 @@
         <div class="card border-0 shadow-sm">
           <div class="card-body p-4">
             <h2 class="h5 mb-1">Cover image</h2>
-            <p class="small text-body-secondary">Optional. If empty, the first image or YouTube thumbnail is used.</p>
+            <p class="small text-body-secondary">
+              Optional. If empty, the first image or YouTube thumbnail is used.
+              <strong>Facebook and Vimeo videos have no automatic thumbnail</strong>, so add one here (a screenshot of the video works well).
+            </p>
             @if (coverPath(); as path) {
               <img [src]="coverUrl(path)" alt="Cover preview" class="img-fluid rounded mb-3" />
               <div class="d-flex gap-2">
