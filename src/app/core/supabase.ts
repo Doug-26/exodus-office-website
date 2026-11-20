@@ -1,6 +1,7 @@
 import { Service } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import { fetchWithRetry } from '../shared/utils/fetch-retry';
 
 export const MEDIA_BUCKET = 'project-media';
 /** Supabase free tier rejects single files over 50 MB. */
@@ -25,6 +26,7 @@ export class Supabase {
     if (!this.configured) throw new SupabaseNotConfiguredError();
     this.instance ??= createClient(this.url, this.anonKey, {
       auth: { persistSession: true, autoRefreshToken: true },
+      global: { fetch: fetchWithRetry },
     });
     return this.instance;
   }
