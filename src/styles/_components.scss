@@ -175,6 +175,49 @@
   }
 }
 
+// Team member card (About page): portrait left, name + role right.
+// Photos can be transparent cutouts (PNG/WebP) or shot on a plain white
+// background: `multiply` makes white pixels take the card color, so both
+// look like the person is standing on the card. `contain` keeps the whole
+// photo visible (no side cropping) and sits it on the card's bottom edge.
+.ex-team-card {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+  background: $ex-sand;
+  border-radius: $border-radius-lg;
+
+  &__photo {
+    position: relative; // required by NgOptimizedImage `fill`
+    flex: 0 0 48%;
+    align-self: stretch;
+    aspect-ratio: 4 / 5;
+
+    img {
+      object-fit: contain;
+      object-position: bottom center;
+      mix-blend-mode: multiply;
+    }
+  }
+
+  &__body {
+    padding: 1rem;
+  }
+
+  &__name {
+    display: block;
+    color: $ex-navy;
+    font-family: $headings-font-family;
+    font-weight: 600;
+  }
+
+  &__role {
+    color: $ex-muted;
+    font-size: 0.9rem;
+  }
+}
+
 .ex-checklist {
   padding: 0;
   margin: 0;
@@ -256,8 +299,7 @@
   border-radius: $border-radius-xl;
   color: rgba(255, 255, 255, 0.85);
   background:
-    radial-gradient(30rem 15rem at 100% 0%, rgba($ex-teal, 0.5), transparent 60%),
-    $ex-navy;
+    radial-gradient(30rem 15rem at 100% 0%, rgba($ex-teal, 0.5), transparent 60%), $ex-navy;
 
   @include media-breakpoint-up(lg) {
     padding: 4rem;
