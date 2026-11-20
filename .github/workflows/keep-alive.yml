@@ -1,0 +1,24 @@
+# Supabase pauses Free-plan projects after about a week without activity.
+# This makes a tiny read-only request twice a week so the live site never goes to sleep.
+# The key below is the PUBLISHABLE key (already public in the app bundle), not a secret.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '0 3 * * 1,4' # Mondays and Thursdays, 03:00 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query published projects
+        env:
+          SUPABASE_URL: https://hjvpmmguhdbmkelwkkwt.supabase.co
+          SUPABASE_KEY: sb_publishable_HgGVGMbeySjFOKjEzczlcQ_dBEUS53j
+        run: |
+          curl --fail --silent --show-error \
+            -H "apikey: $SUPABASE_KEY" \
+            "$SUPABASE_URL/rest/v1/projects?select=id&limit=1"

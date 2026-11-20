@@ -81,8 +81,26 @@ Every inquiry is always saved and visible in `/admin/inquiries`. To also get an 
 
 ## Deploy
 
-**Vercel:** import the GitHub repo. [vercel.json](vercel.json) already sets the build command, output folder, and SPA rewrites.
-**Netlify:** build command `npm run build`, publish directory `dist/exodus-office-website/browser`. [public/_redirects](public/_redirects) handles SPA routing.
+**Cloudflare Pages (recommended, free for business sites):** *Workers & Pages → Create → Pages → Connect to Git*, then:
+- Build command: `npm run build`
+- Build output directory: `dist/exodus-office-website/browser`
+- Environment variable: `NODE_VERSION` = `24`
+
+SPA routing works automatically. [public/_headers](public/_headers) adds the security headers, including a Content Security Policy. If you add a new external source (another Supabase project, font, or video provider), update the CSP there.
+
+**Netlify:** same build command and publish directory. [public/_redirects](public/_redirects) handles SPA routing, and `_headers` works there too.
+**Vercel:** [vercel.json](vercel.json) is included, but Vercel's free Hobby plan is for non-commercial use only, and it doesn't read `_headers`.
+
+### Before going live
+1. Run [supabase/migrations/0002_hardening.sql](supabase/migrations/0002_hardening.sql). It rate-limits the contact form and blocks SVG uploads.
+2. Turn off public sign-ups (see setup step 4) and set *Authentication → URL Configuration → Site URL* to the live URL.
+3. Check *Advisors → Security Advisor* in the Supabase dashboard.
+
+### Running on the free plans
+- **Supabase pauses after about 7 days without activity.** [.github/workflows/keep-alive.yml](.github/workflows/keep-alive.yml) pings it twice a week. GitHub Actions must be enabled on the repo.
+- **No automatic backups on the free plan.** Once a month, run `supabase db dump -f schema.sql` and `supabase db dump --data-only -f data.sql`, and keep the files somewhere private (they contain inquiries). Keep the original media files too.
+- **Limits: 1 GB storage, 5 GB/month bandwidth.** Post long videos on YouTube/Vimeo and add them as links instead of uploading them.
+- **Email without a domain:** use `NOTIFY_FROM="Exodus Website <onboarding@resend.dev>"`. Resend then delivers only to the Resend account's own email, so sign up to Resend with the office inbox and use that address as `NOTIFY_TO`.
 
 ## Project structure
 

@@ -1,0 +1,9 @@
+# Security headers, applied by Cloudflare Pages (and Netlify) to every response.
+# If you add a new external source (fonts, embeds, Supabase project), update the CSP below.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://hjvpmmguhdbmkelwkkwt.supabase.co https://i.ytimg.com; media-src 'self' blob: https://hjvpmmguhdbmkelwkkwt.supabase.co; connect-src 'self' https://hjvpmmguhdbmkelwkkwt.supabase.co wss://hjvpmmguhdbmkelwkkwt.supabase.co; frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://www.facebook.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains

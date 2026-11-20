@@ -12,6 +12,9 @@ export class MediaService {
   validate(file: File, allow: 'image' | 'image-or-video' = 'image-or-video'): string | null {
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
+    if (file.type === 'image/svg+xml') {
+      return `${file.name}: SVG files aren't supported. Please use a JPG, PNG, or WebP image.`;
+    }
     if (allow === 'image' && !isImage) return `${file.name}: please choose an image file.`;
     if (!isImage && !isVideo) return `${file.name}: only images and videos are supported.`;
     if (file.size > MAX_UPLOAD_BYTES) {
@@ -25,7 +28,11 @@ export class MediaService {
    * Uploads a file into `folder/` and returns its storage path.
    * Uses XHR (instead of supabase-js) so we can report upload progress.
    */
-  async upload(file: File, folder: string, onProgress?: (percent: number) => void): Promise<string> {
+  async upload(
+    file: File,
+    folder: string,
+    onProgress?: (percent: number) => void,
+  ): Promise<string> {
     const { data } = await this.sb.client.auth.getSession();
     const token = data.session?.access_token;
     if (!token) throw new Error('Your session has expired. Please sign in again.');
@@ -54,7 +61,8 @@ export class MediaService {
         }
         reject(new Error(message));
       };
-      xhr.onerror = () => reject(new Error('Network error during upload. Check your connection and try again.'));
+      xhr.onerror = () =>
+        reject(new Error('Network error during upload. Check your connection and try again.'));
       xhr.send(file);
     });
 
@@ -78,12 +86,19 @@ export class MediaService {
   }
 
   async add(media: NewMedia): Promise<ProjectMedia> {
-    const { data, error } = await this.sb.client.from('project_media').insert(media).select().single();
+    const { data, error } = await this.sb.client
+      .from('project_media')
+      .insert(media)
+      .select()
+      .single();
     if (error) throw friendlyError(error);
     return data as ProjectMedia;
   }
 
-  async update(id: string, patch: Partial<Pick<ProjectMedia, 'aspect' | 'caption'>>): Promise<void> {
+  async update(
+    id: string,
+    patch: Partial<Pick<ProjectMedia, 'aspect' | 'caption'>>,
+  ): Promise<void> {
     const { error } = await this.sb.client.from('project_media').update(patch).eq('id', id);
     if (error) throw friendlyError(error);
   }
@@ -96,7 +111,9 @@ export class MediaService {
 
   async saveOrder(ids: string[]): Promise<void> {
     const results = await Promise.all(
-      ids.map((id, i) => this.sb.client.from('project_media').update({ sort_order: i }).eq('id', id)),
+      ids.map((id, i) =>
+        this.sb.client.from('project_media').update({ sort_order: i }).eq('id', id),
+      ),
     );
     const failed = results.find((r) => r.error);
     if (failed?.error) throw friendlyError(failed.error);

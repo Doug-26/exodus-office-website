@@ -14,13 +14,22 @@ export class InquiriesService {
   /** Public: visitors may insert but never read inquiries (see RLS). */
   async submit(input: InquiryInput): Promise<void> {
     const { error } = await this.sb.client.from('inquiries').insert(input);
-    if (error) throw new Error('Sorry, your message could not be sent. Please try again or email us directly.');
+    if (error) {
+      // P0001 = the friendly rate-limit message raised by the throttle_inquiries() trigger.
+      if (error.code === 'P0001') throw new Error(error.message);
+      throw new Error(
+        'Sorry, your message could not be sent. Please try again or email us directly.',
+      );
+    }
   }
 
   // ------------------------------------------------------------- Admin
 
   async list(): Promise<Inquiry[]> {
-    const { data, error } = await this.sb.client.from('inquiries').select('*').order('created_at', { ascending: false });
+    const { data, error } = await this.sb.client
+      .from('inquiries')
+      .select('*')
+      .order('created_at', { ascending: false });
     if (error) throw friendlyError(error);
     return data as Inquiry[];
   }

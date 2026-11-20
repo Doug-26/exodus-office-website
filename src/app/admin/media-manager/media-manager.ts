@@ -64,7 +64,9 @@ export class MediaManager implements OnInit {
     const url = this.linkForm.url();
     return url.touched() && url.invalid() ? (url.errors()[0]?.message ?? '') : '';
   });
-  protected readonly canAddLink = computed(() => !this.busy() && !!this.linkForm.url().value().trim());
+  protected readonly canAddLink = computed(
+    () => !this.busy() && !!this.linkForm.url().value().trim(),
+  );
 
   async ngOnInit(): Promise<void> {
     try {
@@ -93,6 +95,11 @@ export class MediaManager implements OnInit {
     if (m.type === 'video_file') return 'Uploaded video';
     const provider = parseVideoUrl(m.embed_url)?.provider;
     return provider ? `${VIDEO_PROVIDER_LABELS[provider]} video` : 'Video link';
+  }
+
+  /** Provider link rebuilt from the validated video id, never the raw stored URL. */
+  protected watchUrl(m: ProjectMedia): string | null {
+    return m.type === 'video_embed' ? (parseVideoUrl(m.embed_url)?.watchUrl ?? null) : null;
   }
 
   protected embedIcon(m: ProjectMedia): string {
@@ -124,7 +131,10 @@ export class MediaManager implements OnInit {
     for (const file of files) {
       const key = crypto.randomUUID();
       const problem = this.media.validate(file);
-      this.uploads.update((u) => [...u, { key, name: file.name, progress: 0, error: problem ?? undefined }]);
+      this.uploads.update((u) => [
+        ...u,
+        { key, name: file.name, progress: 0, error: problem ?? undefined },
+      ]);
       if (problem) continue;
 
       const setItem = (patch: Partial<UploadItem>) =>
