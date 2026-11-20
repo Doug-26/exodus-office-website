@@ -64,7 +64,7 @@ Every inquiry is always saved and visible in `/admin/inquiries`. To also get an 
      WEBHOOK_SECRET=<a-long-random-string>
    supabase functions deploy notify-inquiry --no-verify-jwt
    ```
-3. In the dashboard, open *Database → Webhooks → Create a new hook*:
+3. In the dashboard, open *Integrations → Database Webhooks* (older dashboards: *Database → Webhooks*). The first time, click **Install integration** to enable the `pg_net` extension (choose the `extensions` schema if asked). Then open the **Webhooks** tab → *Create a new hook*:
    - Table: `inquiries`, Events: **Insert**
    - Type: **Supabase Edge Functions** → `notify-inquiry`, method POST
    - HTTP header: `x-webhook-secret` = the same `WEBHOOK_SECRET` value
