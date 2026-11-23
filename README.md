@@ -91,6 +91,14 @@ SPA routing works automatically. [public/_headers](public/_headers) adds the sec
 **Netlify:** same build command and publish directory. [public/_redirects](public/_redirects) handles SPA routing, and `_headers` works there too.
 **Vercel:** [vercel.json](vercel.json) is included, but Vercel's free Hobby plan is for non-commercial use only, and it doesn't read `_headers`.
 
+### Custom domain (`exodushomeoffice.com`)
+The domain is registered with Cloudflare Registrar, so DNS is already on Cloudflare.
+1. *Workers & Pages → (project) → Custom domains → Set up a custom domain*: add `exodushomeoffice.com`, then add `www.exodushomeoffice.com` too.
+2. Send `www` and `*.pages.dev` traffic to the main domain with a 301 redirect (*Rules → Redirect Rules* for `www`; *Bulk Redirects* for `pages.dev`). `_redirects` can't redirect between domains.
+3. Supabase *Authentication → URL Configuration*: set Site URL to `https://exodushomeoffice.com` and add `https://exodushomeoffice.com/**` to Redirect URLs.
+4. The live URL is `SITE.url` in [src/app/site.config.ts](src/app/site.config.ts), and it's also hardcoded in [src/index.html](src/index.html), [public/robots.txt](public/robots.txt) and [public/sitemap.xml](public/sitemap.xml). If the domain ever changes, update all four.
+5. Email: *Email → Email Routing* forwards `hello@exodushomeoffice.com` to an existing inbox for free. For notifications, verify the domain in Resend (it adds DNS records to Cloudflare) and send from it, e.g. `NOTIFY_FROM="Exodus Website <website@exodushomeoffice.com>"`.
+
 ### Before going live
 1. Run [supabase/migrations/0002_hardening.sql](supabase/migrations/0002_hardening.sql). It rate-limits the contact form and blocks SVG uploads.
 2. Turn off public sign-ups (see setup step 4) and set *Authentication → URL Configuration → Site URL* to the live URL.

@@ -10,6 +10,8 @@ export interface SocialLink {
 
 export interface SiteConfig {
   name: string;
+  /** Live site origin, no trailing slash. Used for canonical links and og:url. */
+  url: string;
   tagline: string;
   description: string;
   email: string;
@@ -20,6 +22,7 @@ export interface SiteConfig {
 
 export const SITE: SiteConfig = {
   name: 'Exodus Home Office',
+  url: 'https://exodushomeoffice.com',
   tagline: 'Skilled People, Quality Work, and Services You Can Trust.',
   description:
     'Exodus Home Office is a team of trained Social Media Managers, Video Editors, and Bookkeepers providing reliable, high-quality virtual services for businesses.',
