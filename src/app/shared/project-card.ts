@@ -24,7 +24,7 @@ import { ProjectsService } from '../data/projects.service';
       </div>
       <div class="ex-project-card__body">
         <span class="badge ex-badge-cat">{{ category().label }}</span>
-        <h3>{{ project().title }}</h3>
+        <h3 [title]="project().title">{{ project().title }}</h3>
         @if (project().client_name) {
           <p class="small text-body-secondary mb-0">for {{ project().client_name }}</p>
         }

@@ -342,22 +342,23 @@
   }
 }
 
+// Masonry: items are dealt into columns in TS (`toColumns`), so order is always
+// left-to-right and doesn't shift with zoom/text wrapping like CSS `columns` did.
 .ex-masonry {
-  column-gap: 1.5rem;
-  columns: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
 
-  @include media-breakpoint-up(sm) {
-    columns: 2;
-  }
-
-  @include media-breakpoint-up(lg) {
-    columns: 3;
-  }
+.ex-masonry-col {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
 
   > * {
     display: block;
-    margin-bottom: 1.5rem;
-    break-inside: avoid;
   }
 }
 
@@ -409,10 +410,19 @@
     padding: 1.1rem 1.25rem 1.25rem;
   }
 
+  // Titles always take exactly 2 lines (short ones reserve the space, long ones get "…")
+  // so cards with the same media shape line up row by row.
   h3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    min-height: 2.6em; // 2 × line-height
     margin: 0.5rem 0 0.15rem;
     font-size: 1.05rem;
     font-weight: 600;
+    line-height: 1.3;
   }
 }
 

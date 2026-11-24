@@ -6,8 +6,8 @@
         <span class="ex-eyebrow ex-eyebrow--light">Virtual services you can rely on</span>
         <h1 class="display-4 mb-4">Skilled people, quality work, and services you can trust.</h1>
         <p class="lead mb-4 ex-hero__lead">
-          We're a team of trained Social Media Managers, Video Editors, and Bookkeepers who help businesses grow. You
-          focus on what matters most, and we take care of the rest.
+          We're a team of trained Social Media Managers, Video Editors, and Bookkeepers who help
+          businesses grow. You focus on what matters most, and we take care of the rest.
         </p>
         <div class="d-flex flex-wrap gap-3">
           <a routerLink="/portfolio" class="btn btn-warning btn-lg">View our work</a>
@@ -37,7 +37,9 @@
     <div class="row g-3 justify-content-between">
       @for (t of trust; track t.label) {
         <div class="col-6 col-lg-auto">
-          <div class="ex-trust__item"><i class="bi {{ t.icon }}" aria-hidden="true"></i>{{ t.label }}</div>
+          <div class="ex-trust__item">
+            <i class="bi {{ t.icon }}" aria-hidden="true"></i>{{ t.label }}
+          </div>
         </div>
       }
     </div>
@@ -57,7 +59,9 @@
       @for (s of services; track s.id) {
         <div class="col-md-6 col-lg-4">
           <article class="ex-card ex-card--hover d-flex flex-column">
-            <span class="ex-icon-badge ex-icon-badge--lg mb-4"><i class="bi {{ s.icon }}" aria-hidden="true"></i></span>
+            <span class="ex-icon-badge ex-icon-badge--lg mb-4"
+              ><i class="bi {{ s.icon }}" aria-hidden="true"></i
+            ></span>
             <h3 class="h4">{{ s.title }}</h3>
             <p class="text-body-secondary">{{ s.summary }}</p>
             <ul class="ex-checklist mb-4">
@@ -85,7 +89,9 @@
           heading="Recent projects"
           subtitle="Videos, reels, and designs we've created for our clients."
         />
-        <a routerLink="/portfolio" class="btn btn-outline-primary mt-3 mt-md-0 flex-shrink-0">See full portfolio</a>
+        <a routerLink="/portfolio" class="btn btn-outline-primary mt-3 mt-md-0 flex-shrink-0"
+          >See full portfolio</a
+        >
       </div>
 
       @if (loading()) {
@@ -96,8 +102,12 @@
         </div>
       } @else {
         <div class="ex-masonry">
-          @for (p of featured(); track p.id) {
-            <app-project-card [project]="p" />
+          @for (col of featuredColumns(); track $index) {
+            <div class="ex-masonry-col">
+              @for (p of col; track p.id) {
+                <app-project-card [project]="p" />
+              }
+            </div>
           }
         </div>
       }
@@ -122,7 +132,9 @@
           @for (v of values; track v.title) {
             <div class="col-sm-6">
               <div class="ex-card">
-                <span class="ex-icon-badge ex-icon-badge--amber mb-3"><i class="bi {{ v.icon }}" aria-hidden="true"></i></span>
+                <span class="ex-icon-badge ex-icon-badge--amber mb-3"
+                  ><i class="bi {{ v.icon }}" aria-hidden="true"></i
+                ></span>
                 <h3 class="h5">{{ v.title }}</h3>
                 <p class="text-body-secondary mb-0">{{ v.text }}</p>
               </div>

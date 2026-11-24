@@ -1,11 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Project } from '../../data/models';
 import { ProjectsService } from '../../data/projects.service';
 import { SERVICES, VALUES } from '../../data/services.data';
 import { CtaBand } from '../../shared/cta-band';
+import { injectMasonryColumns } from '../../shared/masonry';
 import { ProjectCard } from '../../shared/project-card';
 import { SectionHeading } from '../../shared/section-heading';
+import { toColumns } from '../../shared/utils/masonry';
 
 @Component({
   selector: 'app-home',
@@ -25,6 +27,10 @@ export class Home {
   ];
 
   protected readonly featured = signal<Project[]>([]);
+  private readonly columnCount = injectMasonryColumns();
+  protected readonly featuredColumns = computed(() =>
+    toColumns(this.featured(), this.columnCount()),
+  );
   protected readonly loading = signal(true);
 
   constructor() {
