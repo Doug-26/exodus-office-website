@@ -27,7 +27,7 @@ export const SITE: SiteConfig = {
   description:
     'Exodus Home Office is a team of trained Social Media Managers, Video Editors, and Bookkeepers providing reliable, high-quality virtual services for businesses.',
   // TODO: replace with the office's real contact details.
-  email: '',
+  email: 'contact@exodushomeoffice.com',
   phone: '',
   location: 'Remote team, serving clients worldwide',
   socials: [

@@ -97,7 +97,7 @@ The domain is registered with Cloudflare Registrar, so DNS is already on Cloudfl
 2. Send `www` and `*.pages.dev` traffic to the main domain with a 301 redirect (*Rules → Redirect Rules* for `www`; *Bulk Redirects* for `pages.dev`). `_redirects` can't redirect between domains.
 3. Supabase *Authentication → URL Configuration*: set Site URL to `https://exodushomeoffice.com` and add `https://exodushomeoffice.com/**` to Redirect URLs.
 4. The live URL is `SITE.url` in [src/app/site.config.ts](src/app/site.config.ts), and it's also hardcoded in [src/index.html](src/index.html), [public/robots.txt](public/robots.txt) and [public/sitemap.xml](public/sitemap.xml). If the domain ever changes, update all four.
-5. Email: *Email → Email Routing* forwards `hello@exodushomeoffice.com` to an existing inbox for free. For notifications, verify the domain in Resend (it adds DNS records to Cloudflare) and send from it, e.g. `NOTIFY_FROM="Exodus Website <website@exodushomeoffice.com>"`.
+5. Email: *Email → Email Routing* forwards `contact@exodushomeoffice.com` to an existing inbox for free (one destination per address, so use a Google Group to reach the whole team). For notifications, verify the domain in Resend (it adds DNS records to Cloudflare) and send from it, e.g. `NOTIFY_FROM="Exodus Website <website@exodushomeoffice.com>"`. `NOTIFY_TO` takes a comma-separated list, so every teammate can get inquiry emails.
 
 ### Before going live
 1. Run [supabase/migrations/0002_hardening.sql](supabase/migrations/0002_hardening.sql). It rate-limits the contact form and blocks SVG uploads.

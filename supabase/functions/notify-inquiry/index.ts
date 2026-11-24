@@ -3,7 +3,7 @@
 // Triggered by a Database Webhook on INSERT into public.inquiries (see README).
 // Required secrets (supabase secrets set ...):
 //   RESEND_API_KEY   API key from https://resend.com
-//   NOTIFY_TO        Office inbox that receives inquiries, e.g. hello@yourdomain.com
+//   NOTIFY_TO        Inbox(es) that receive inquiries, comma-separated, e.g. a@gmail.com,b@gmail.com
 //   NOTIFY_FROM      Verified sender, e.g. "Exodus Website <website@yourdomain.com>"
 //   WEBHOOK_SECRET   Random string; the webhook must send it in the x-webhook-secret header
 
