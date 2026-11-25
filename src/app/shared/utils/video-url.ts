@@ -5,6 +5,8 @@ export interface ParsedVideo {
   id: string;
   /** Safe-to-embed player URL built from the validated id only. */
   embedUrl: string;
+  /** `embedUrl` that starts playing right away (used after a click on the play button). */
+  autoplayUrl: string;
   /** Link to the video on the provider's own site, also rebuilt from the validated id. */
   watchUrl: string;
   /** Public thumbnail when the provider offers one without an API key (YouTube only). */
@@ -55,10 +57,12 @@ export function parseVideoUrl(raw: string | null | undefined): ParsedVideo | nul
   }
   if (ytId !== undefined) {
     if (!YOUTUBE_ID.test(ytId)) return null;
+    const embedUrl = `https://www.youtube-nocookie.com/embed/${ytId}?rel=0`;
     return {
       provider: 'youtube',
       id: ytId,
-      embedUrl: `https://www.youtube-nocookie.com/embed/${ytId}?rel=0`,
+      embedUrl,
+      autoplayUrl: `${embedUrl}&autoplay=1`,
       watchUrl: `https://www.youtube.com/watch?v=${ytId}`,
       thumbnailUrl: `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`,
       isVertical: isShort,
@@ -74,10 +78,12 @@ export function parseVideoUrl(raw: string | null | undefined): ParsedVideo | nul
     const next = parts[idx + 1];
     const hash = url.searchParams.get('h') ?? (host === 'vimeo.com' ? next : undefined);
     const safeHash = hash && /^[a-f0-9]+$/i.test(hash) ? hash : null;
+    const embedUrl = `https://player.vimeo.com/video/${id}${safeHash ? `?h=${safeHash}` : ''}`;
     return {
       provider: 'vimeo',
       id,
-      embedUrl: `https://player.vimeo.com/video/${id}${safeHash ? `?h=${safeHash}` : ''}`,
+      embedUrl,
+      autoplayUrl: `${embedUrl}${safeHash ? '&' : '?'}autoplay=1`,
       watchUrl: `https://vimeo.com/${id}${safeHash ? `/${safeHash}` : ''}`,
       thumbnailUrl: null,
       isVertical: false,
@@ -91,10 +97,12 @@ export function parseVideoUrl(raw: string | null | undefined): ParsedVideo | nul
     // Rebuilt from the numeric id so nothing user-supplied reaches the iframe.
     const href = `https://www.facebook.com/watch/?v=${id}`;
     const isReel = parts[0] === 'reel' || parts[0] === 'reels';
+    const embedUrl = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(href)}&show_text=false`;
     return {
       provider: 'facebook',
       id,
-      embedUrl: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(href)}&show_text=false`,
+      embedUrl,
+      autoplayUrl: `${embedUrl}&autoplay=true`,
       watchUrl: isReel ? `https://www.facebook.com/reel/${id}` : href,
       thumbnailUrl: null,
       isVertical: isReel,

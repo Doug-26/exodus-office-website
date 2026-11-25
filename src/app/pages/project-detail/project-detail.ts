@@ -2,15 +2,20 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { RouterLink } from '@angular/router';
 import { SeoService } from '../../core/seo';
 import { Supabase } from '../../core/supabase';
-import { categoryInfo, Project, ratioClass } from '../../data/models';
+import { categoryInfo, Project, ProjectMedia, ratioClass } from '../../data/models';
 import { ProjectsService } from '../../data/projects.service';
+import { LazyVideo } from '../../shared/lazy-video';
 import { Lightbox, LightboxImage } from '../../shared/lightbox';
 import { projectContactParams } from '../../shared/utils/inquiry-project';
 import { VideoEmbed } from '../../shared/video-embed';
 
+interface GalleryImage extends LightboxImage {
+  thumb: string;
+}
+
 @Component({
   selector: 'app-project-detail',
-  imports: [RouterLink, VideoEmbed, Lightbox],
+  imports: [RouterLink, VideoEmbed, Lightbox, LazyVideo],
   templateUrl: './project-detail.html',
 })
 export class ProjectDetail {
@@ -36,11 +41,16 @@ export class ProjectDetail {
     return p ? projectContactParams(p) : null;
   });
   protected readonly videos = computed(() => (this.project()?.project_media ?? []).filter((m) => m.type !== 'image'));
-  protected readonly images = computed<LightboxImage[]>(() => {
+  /** Gallery tiles load the small `thumb`; the lightbox loads the full `src`. */
+  protected readonly images = computed<GalleryImage[]>(() => {
     const p = this.project();
     return (p?.project_media ?? [])
       .filter((m) => m.type === 'image')
-      .map((m, i) => ({ src: this.projects.mediaUrl(m) ?? '', alt: m.caption || `${p?.title} image ${i + 1}` }));
+      .map((m, i) => ({
+        src: this.projects.mediaUrl(m) ?? '',
+        thumb: this.projects.thumbUrl(m) ?? '',
+        alt: m.caption || `${p?.title} image ${i + 1}`,
+      }));
   });
 
   protected readonly ratioClass = ratioClass;
@@ -54,6 +64,11 @@ export class ProjectDetail {
 
   protected fileUrl(path: string): string {
     return this.sb.publicUrl(path);
+  }
+
+  /** Poster frame captured at upload (null for older uploads). */
+  protected posterUrl(m: ProjectMedia): string | null {
+    return m.thumb_path ? this.sb.publicUrl(m.thumb_path) : null;
   }
 
   private async load(slug: string): Promise<void> {

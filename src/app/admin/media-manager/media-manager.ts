@@ -3,13 +3,17 @@ import { form, FormField, FormRoot, validate } from '@angular/forms/signals';
 import { MAX_UPLOAD_BYTES } from '../../core/supabase';
 import { MediaService } from '../../data/media.service';
 import { ASPECTS, MediaAspect, ProjectMedia } from '../../data/models';
-import { detectAspect } from '../../shared/utils/media-aspect';
+import { LazyVideo } from '../../shared/lazy-video';
+import { prepareUpload } from '../../shared/utils/image-resize';
+import { withIndexOrder } from '../../shared/utils/sort-order';
 import { parseVideoUrl, VIDEO_PROVIDER_LABELS } from '../../shared/utils/video-url';
 
 interface UploadItem {
   key: string;
   name: string;
   progress: number;
+  /** True while the file is being resized / its poster frame captured, before uploading. */
+  optimizing?: boolean;
   error?: string;
 }
 
@@ -23,7 +27,7 @@ const EMPTY_LINK: LinkModel = { url: '', aspect: '16:9' };
 /** Lists, uploads, links, reorders and deletes the media of one project. */
 @Component({
   selector: 'app-media-manager',
-  imports: [FormField, FormRoot],
+  imports: [FormField, FormRoot, LazyVideo],
   templateUrl: './media-manager.html',
 })
 export class MediaManager implements OnInit {
@@ -81,9 +85,8 @@ export class MediaManager implements OnInit {
   // ------------------------------------------------------------ Display helpers
 
   protected thumb(m: ProjectMedia): string | null {
-    if (m.type === 'image' && m.storage_path) return this.media.publicUrl(m.storage_path);
     if (m.type === 'video_embed') return parseVideoUrl(m.embed_url)?.thumbnailUrl ?? null;
-    return null;
+    return this.media.thumbUrl(m);
   }
 
   protected fileUrl(m: ProjectMedia): string | null {
@@ -133,7 +136,7 @@ export class MediaManager implements OnInit {
       const problem = this.media.validate(file);
       this.uploads.update((u) => [
         ...u,
-        { key, name: file.name, progress: 0, error: problem ?? undefined },
+        { key, name: file.name, progress: 0, optimizing: !problem, error: problem ?? undefined },
       ]);
       if (problem) continue;
 
@@ -141,21 +144,39 @@ export class MediaManager implements OnInit {
         this.uploads.update((u) => u.map((x) => (x.key === key ? { ...x, ...patch } : x)));
 
       let path: string | null = null;
+      let thumbPath: string | null = null;
       try {
-        const aspect = await detectAspect(file);
-        path = await this.media.upload(file, this.projectId(), (progress) => setItem({ progress }));
+        // Smaller image + thumbnail, or a poster frame for videos (see image-resize.ts).
+        const { main, thumb, aspect } = await prepareUpload(file);
+        setItem({ optimizing: false });
+
+        // One progress bar for both files, weighted by size.
+        const share = main.size / (main.size + (thumb?.size ?? 0));
+        path = await this.media.upload(main, this.projectId(), (p) =>
+          setItem({ progress: Math.round(p * share) }),
+        );
+        if (thumb) {
+          // The preview is optional: if it fails, keep the upload and use the original.
+          thumbPath = await this.media
+            .upload(thumb, this.projectId(), (p) =>
+              setItem({ progress: Math.round(share * 100 + p * (1 - share)) }),
+            )
+            .catch(() => null);
+        }
+
         const row = await this.media.add({
           project_id: this.projectId(),
           type: file.type.startsWith('video/') ? 'video_file' : 'image',
           storage_path: path,
+          thumb_path: thumbPath,
           aspect,
           sort_order: this.items().length,
         });
         this.items.update((list) => [...list, row]);
         this.uploads.update((u) => u.filter((x) => x.key !== key));
       } catch (e) {
-        if (path) void this.media.removeFiles([path]);
-        setItem({ error: `${file.name}: ${(e as Error).message}` });
+        void this.media.removeFiles([path, thumbPath]);
+        setItem({ optimizing: false, error: `${file.name}: ${(e as Error).message}` });
       }
     }
   }
@@ -213,7 +234,10 @@ export class MediaManager implements OnInit {
     const target = index + delta;
     [list[index], list[target]] = [list[target], list[index]];
     this.items.set(list);
-    await this.run(() => this.media.saveOrder(list.map((m) => m.id)));
+    await this.run(async () => {
+      await this.media.saveOrder(list);
+      this.items.set(withIndexOrder(list));
+    });
   }
 
   protected async remove(m: ProjectMedia): Promise<void> {

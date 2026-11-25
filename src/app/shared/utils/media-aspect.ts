@@ -9,27 +9,3 @@ export function nearestAspect(width: number, height: number): MediaAspect {
   if (r < 1.25) return '1:1';
   return '16:9';
 }
-
-/** Reads an image's or video's dimensions in the browser to guess its aspect. */
-export function detectAspect(file: File): Promise<MediaAspect> {
-  return new Promise((resolve) => {
-    const src = URL.createObjectURL(file);
-    const done = (w: number, h: number) => {
-      URL.revokeObjectURL(src);
-      resolve(nearestAspect(w, h));
-    };
-
-    if (file.type.startsWith('video/')) {
-      const v = document.createElement('video');
-      v.preload = 'metadata';
-      v.onloadedmetadata = () => done(v.videoWidth, v.videoHeight);
-      v.onerror = () => done(0, 0);
-      v.src = src;
-    } else {
-      const img = new Image();
-      img.onload = () => done(img.naturalWidth, img.naturalHeight);
-      img.onerror = () => done(0, 0);
-      img.src = src;
-    }
-  });
-}

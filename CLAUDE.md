@@ -53,10 +53,18 @@ Any new table or operation needs matching grants + RLS policies in SQL. Client-s
 - Route params bind to component inputs (`withComponentInputBinding()`).
 - SEO: set `title` and `data.description` on routes; `data.noindex` on any ancestor (the whole `/admin` tree has it) adds `noindex`. Pages with dynamic content (project detail) call `SeoService.set()` themselves.
 - Admin save actions wrap work in `withMinDuration()` so spinners don't flicker.
-- Ordering is a `sort_order` integer; `saveOrder(ids)` writes array index as `sort_order`. Nested media from `select('*, project_media(*)')` is re-sorted client-side.
+- Ordering is a `sort_order` integer; `saveOrder(items)` writes array index as `sort_order`, but only for rows that changed (`changedOrder()` in [sort-order.ts](src/app/shared/utils/sort-order.ts)), then callers apply `withIndexOrder()` locally. Nested media from `select('*, project_media(*)')` is re-sorted client-side.
 
 ### Project media model
-`project_media.type` is `image` | `video_file` (uploaded to storage, `storage_path` set) | `video_embed` (`embed_url` set). A DB check constraint enforces exactly one source. Embeds must go through `parseVideoUrl()` ([video-url.ts](src/app/shared/utils/video-url.ts)), which accepts only YouTube/Vimeo/Facebook and rebuilds the iframe URL from the validated id. Never put raw user URLs in an iframe. Uploads use XHR in `MediaService.upload()` (for progress events) instead of supabase-js. Card cover fallback chain: `cover_path` → first image → YouTube thumbnail → first video file frame (`#t=0.1`).
+`project_media.type` is `image` | `video_file` (uploaded to storage, `storage_path` set) | `video_embed` (`embed_url` set). A DB check constraint enforces exactly one source. Embeds must go through `parseVideoUrl()` ([video-url.ts](src/app/shared/utils/video-url.ts)), which accepts only YouTube/Vimeo/Facebook and rebuilds the iframe URL from the validated id. Never put raw user URLs in an iframe. Uploads use XHR in `MediaService.upload()` (for progress events) instead of supabase-js.
+
+**Media performance rules** (Free plan, so there are no server-side image transformations):
+- Uploads are optimised in the admin's browser by [image-resize.ts](src/app/shared/utils/image-resize.ts). `prepareUpload()` caps images at 2048 px (WebP, or JPEG on Safari), stores an 800 px thumbnail, and captures a poster frame for videos. Both the thumbnail and the poster go in `project_media.thumb_path` (migration 0004, optional in `ProjectMedia`). Covers go through `prepareCover()` (1600 px). GIFs keep their original file. Videos aren't transcoded.
+- Never show an original where a small file will do. Use `ProjectsService.thumbUrl()` / `MediaService.thumbUrl()` (built on `previewPath()` in models.ts) for cards, tiles and admin thumbnails; `mediaUrl()` is only for the lightbox and the video player. Deleting media must also delete `thumb_path`.
+- Card cover fallback chain: `cover_path` → first image's thumb → YouTube thumbnail → first video's poster → (older uploads) the video file itself.
+- A `<video>` without a poster must use `[appLazySrc]` ([lazy-video.ts](src/app/shared/lazy-video.ts)), never a bare `[src]`, so it only loads near the viewport. With a poster, use `[poster]` + `preload="none"`.
+- `VideoEmbed` renders a click-to-play button first and only creates the provider iframe (with `autoplayUrl`) on click. Don't render embed iframes eagerly.
+- `/portfolio` renders 12 cards per "Show more" batch; the first row is `[eager]` (likely the LCP).
 
 ### Keeping things in sync
 - Portfolio categories: `CATEGORIES` in [models.ts](src/app/data/models.ts) **and** the `project_category` enum in SQL. The same applies to media types, aspects (`16:9`, `9:16`, `1:1`, `4:5`), and inquiry statuses.

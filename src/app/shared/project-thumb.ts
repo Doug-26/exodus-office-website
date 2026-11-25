@@ -1,16 +1,18 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Project } from '../data/models';
 import { ProjectsService } from '../data/projects.service';
+import { LazyVideo } from './lazy-video';
 
 /** Small decorative project thumbnail: cover image → first video frame → icon. */
 @Component({
   selector: 'app-project-thumb',
+  imports: [LazyVideo],
   host: { class: 'ex-thumb', '[class.ex-thumb--lg]': "size() === 'lg'" },
   template: `
     @if (cover(); as src) {
-      <img [src]="src" alt="" loading="lazy" />
+      <img [src]="src" alt="" loading="lazy" decoding="async" />
     } @else if (video(); as src) {
-      <video [src]="src" muted playsinline preload="metadata" aria-hidden="true"></video>
+      <video [appLazySrc]="src" muted playsinline aria-hidden="true"></video>
     } @else {
       <i class="bi {{ icon() }}" aria-hidden="true"></i>
     }

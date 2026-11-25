@@ -1,7 +1,29 @@
 import { inject, Service } from '@angular/core';
 import { MAX_UPLOAD_BYTES, MEDIA_BUCKET, Supabase } from '../core/supabase';
-import { NewMedia, ProjectMedia } from './models';
+import { isMissingColumnError } from '../shared/utils/inquiry-project';
+import { changedOrder, Ordered } from '../shared/utils/sort-order';
+import { NewMedia, previewPath, ProjectMedia } from './models';
 import { friendlyError } from './projects.service';
+
+const MIME_EXTENSIONS: Record<string, string> = {
+  'image/webp': 'webp',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/avif': 'avif',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
+};
+
+/** File extension for a storage path: the file's own name, else its (re-encoded) type. */
+function extensionOf(file: Blob): string {
+  const fromName =
+    file instanceof File
+      ? (file.name.split('.').pop() ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
+      : '';
+  return fromName || MIME_EXTENSIONS[file.type] || 'bin';
+}
 
 /** Uploads files to Supabase Storage and manages `project_media` rows (admin only). */
 @Service()
@@ -25,11 +47,11 @@ export class MediaService {
   }
 
   /**
-   * Uploads a file into `folder/` and returns its storage path.
-   * Uses XHR (instead of supabase-js) so we can report upload progress.
+   * Uploads a file (or a resized blob from `prepareUpload()`) into `folder/` and returns its
+   * storage path. Uses XHR (instead of supabase-js) so we can report upload progress.
    */
   async upload(
-    file: File,
+    file: Blob,
     folder: string,
     onProgress?: (percent: number) => void,
   ): Promise<string> {
@@ -37,8 +59,7 @@ export class MediaService {
     const token = data.session?.access_token;
     if (!token) throw new Error('Your session has expired. Please sign in again.');
 
-    const ext = (file.name.split('.').pop() ?? '').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
-    const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+    const path = `${folder}/${crypto.randomUUID()}.${extensionOf(file)}`;
 
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -85,12 +106,20 @@ export class MediaService {
     return data as ProjectMedia[];
   }
 
+  /**
+   * Adds a media row. `thumb_path` is only sent when set; if the database doesn't have that
+   * column yet (0004 not applied), the row is saved without it and the thumb file is removed.
+   */
   async add(media: NewMedia): Promise<ProjectMedia> {
-    const { data, error } = await this.sb.client
-      .from('project_media')
-      .insert(media)
-      .select()
-      .single();
+    const { thumb_path, ...base } = media;
+    const insert = (row: NewMedia) =>
+      this.sb.client.from('project_media').insert(row).select().single();
+
+    let { data, error } = await insert(thumb_path ? media : base);
+    if (error && thumb_path && isMissingColumnError(error)) {
+      void this.removeFiles([thumb_path]);
+      ({ data, error } = await insert(base));
+    }
     if (error) throw friendlyError(error);
     return data as ProjectMedia;
   }
@@ -106,13 +135,14 @@ export class MediaService {
   async remove(media: ProjectMedia): Promise<void> {
     const { error } = await this.sb.client.from('project_media').delete().eq('id', media.id);
     if (error) throw friendlyError(error);
-    await this.removeFiles([media.storage_path]);
+    await this.removeFiles([media.storage_path, media.thumb_path]);
   }
 
-  async saveOrder(ids: string[]): Promise<void> {
+  /** Saves `items`' positions as sort_order, writing only the rows that changed. */
+  async saveOrder(items: readonly Ordered[]): Promise<void> {
     const results = await Promise.all(
-      ids.map((id, i) =>
-        this.sb.client.from('project_media').update({ sort_order: i }).eq('id', id),
+      changedOrder(items).map(({ id, sort_order }) =>
+        this.sb.client.from('project_media').update({ sort_order }).eq('id', id),
       ),
     );
     const failed = results.find((r) => r.error);
@@ -121,5 +151,11 @@ export class MediaService {
 
   publicUrl(path: string): string {
     return this.sb.publicUrl(path);
+  }
+
+  /** Small preview for lists: the thumbnail/poster when there is one, else the file itself. */
+  thumbUrl(m: ProjectMedia): string | null {
+    const path = previewPath(m);
+    return path ? this.sb.publicUrl(path) : null;
   }
 }

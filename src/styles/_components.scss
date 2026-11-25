@@ -561,6 +561,59 @@
   }
 }
 
+// "Click to play" stand-in for a YouTube/Vimeo/Facebook player (see VideoEmbed).
+.ex-embed-facade {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: #fff;
+  background: linear-gradient(140deg, $ex-navy-700, $ex-teal);
+  cursor: pointer;
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__brand {
+    position: absolute;
+    inset: auto 0 1rem;
+    font-weight: 600;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.9);
+
+    .bi {
+      margin-right: 0.35rem;
+    }
+  }
+
+  .ex-play {
+    transition: transform 0.2s var(--ex-ease);
+  }
+
+  &:hover .ex-play,
+  &:focus-visible .ex-play {
+    transform: scale(1.1);
+  }
+
+  &:focus-visible {
+    outline: 3px solid $ex-amber;
+    outline-offset: -3px;
+  }
+}
+
+.ex-play--center {
+  position: relative;
+  inset: auto;
+  width: 4rem;
+  height: 4rem;
+  font-size: 2rem;
+}
+
 .ex-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));

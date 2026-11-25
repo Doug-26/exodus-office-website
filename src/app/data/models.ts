@@ -42,6 +42,19 @@ export interface ProjectMedia {
   caption: string | null;
   sort_order: number;
   created_at: string;
+  /**
+   * Small preview file (resized image or video poster frame), added by 0004_media_thumbs.sql.
+   * Optional: null for older uploads and undefined until that migration runs.
+   */
+  thumb_path?: string | null;
+}
+
+/**
+ * Storage path of a media item's small preview: its thumbnail / video poster, else the image
+ * itself (uploads from before 0004). Null for videos without a poster and for embeds.
+ */
+export function previewPath(m: ProjectMedia): string | null {
+  return m.thumb_path ?? (m.type === 'image' ? m.storage_path : null);
 }
 
 export interface Project {
@@ -75,7 +88,7 @@ export type ProjectInput = Pick<
 >;
 
 export type NewMedia = Pick<ProjectMedia, 'project_id' | 'type' | 'aspect'> &
-  Partial<Pick<ProjectMedia, 'storage_path' | 'embed_url' | 'caption' | 'sort_order'>>;
+  Partial<Pick<ProjectMedia, 'storage_path' | 'embed_url' | 'caption' | 'sort_order' | 'thumb_path'>>;
 
 export interface Inquiry {
   id: string;

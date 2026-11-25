@@ -26,7 +26,12 @@
                     [class.ex-media-frame--portrait]="m.aspect === '9:16' || m.aspect === '4:5'"
                   >
                     <div class="ratio" [class]="ratioClass(m.aspect)">
-                      <video [src]="fileUrl(m.storage_path) + '#t=0.1'" controls playsinline preload="metadata"></video>
+                      @if (posterUrl(m); as poster) {
+                        <!-- Shows the poster; the video itself only downloads when played. -->
+                        <video [src]="fileUrl(m.storage_path)" [poster]="poster" controls playsinline preload="none"></video>
+                      } @else {
+                        <video [appLazySrc]="fileUrl(m.storage_path) + '#t=0.1'" controls playsinline></video>
+                      }
                     </div>
                   </div>
                 }
@@ -40,7 +45,7 @@
               <div class="ex-gallery">
                 @for (img of images(); track img.src; let i = $index) {
                   <button type="button" class="ratio ratio-1x1" (click)="lightboxIndex.set(i)" [attr.aria-label]="'Open ' + img.alt">
-                    <img [src]="img.src" [alt]="img.alt" loading="lazy" decoding="async" />
+                    <img [src]="img.thumb" [alt]="img.alt" loading="lazy" decoding="async" />
                   </button>
                 }
               </div>

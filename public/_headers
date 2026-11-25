@@ -7,3 +7,17 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# Caching. Every .js/.css file and everything in /media (icon fonts) has a content hash in its
+# name (angular.json outputHashing: all), so browsers can keep them for a year without asking
+# again. index.html and other unhashed files keep the default (revalidate on each visit), so a
+# new deploy is picked up right away.
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+/media/*
+  Cache-Control: public, max-age=31536000, immutable
+# Team photos aren't hashed: cache for a week, so a replaced photo shows up within days.
+/team/*
+  Cache-Control: public, max-age=604800

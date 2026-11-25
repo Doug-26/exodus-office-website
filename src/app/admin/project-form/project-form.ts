@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CATEGORIES, ProjectCategory, ProjectInput } from '../../data/models';
 import { MediaService } from '../../data/media.service';
 import { ProjectsService } from '../../data/projects.service';
+import { prepareCover } from '../../shared/utils/image-resize';
 import { withMinDuration } from '../../shared/utils/min-duration';
 import { SLUG_PATTERN, slugify } from '../../shared/utils/slug';
 import { MediaManager } from '../media-manager/media-manager';
@@ -114,7 +115,9 @@ export class ProjectForm implements OnInit {
     this.coverProgress.set(0);
     try {
       const previous = this.coverPath();
-      const path = await this.media.upload(file, 'covers', (p) => this.coverProgress.set(p));
+      // Capped at 1600 px: plenty for cards and share previews, a fraction of a phone photo.
+      const cover = await prepareCover(file);
+      const path = await this.media.upload(cover, 'covers', (p) => this.coverProgress.set(p));
       this.coverPath.set(path);
       // Drop an unsaved earlier upload right away; the saved one goes after save().
       if (previous && previous !== this.savedCover) void this.media.removeFiles([previous]);

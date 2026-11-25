@@ -1,8 +1,9 @@
 import { inject, Service } from '@angular/core';
 import type { PostgrestError } from '@supabase/supabase-js';
 import { MEDIA_BUCKET, Supabase } from '../core/supabase';
+import { changedOrder, Ordered } from '../shared/utils/sort-order';
 import { parseVideoUrl } from '../shared/utils/video-url';
-import { Project, ProjectInput, ProjectMedia } from './models';
+import { previewPath, Project, ProjectInput, ProjectMedia } from './models';
 
 const PROJECT_WITH_MEDIA = '*, project_media(*)';
 
@@ -106,11 +107,11 @@ export class ProjectsService {
     return data as Project;
   }
 
-  /** Deletes the project, its media rows (cascade) and its files in storage. */
+  /** Deletes the project, its media rows (cascade) and its files (incl. thumbnails) in storage. */
   async remove(project: Project): Promise<void> {
     const paths = [
       project.cover_path,
-      ...(project.project_media ?? []).map((m) => m.storage_path),
+      ...(project.project_media ?? []).flatMap((m) => [m.storage_path, m.thumb_path]),
     ].filter((p): p is string => !!p);
 
     const { error } = await this.sb.client.from('projects').delete().eq('id', project.id);
@@ -118,10 +119,12 @@ export class ProjectsService {
     if (paths.length) await this.sb.client.storage.from(MEDIA_BUCKET).remove(paths);
   }
 
-  /** Persists a new display order: position in `ids` becomes sort_order. */
-  async saveOrder(ids: string[]): Promise<void> {
+  /** Persists a new display order: position in `items` becomes sort_order (changed rows only). */
+  async saveOrder(items: readonly Ordered[]): Promise<void> {
     const results = await Promise.all(
-      ids.map((id, i) => this.sb.client.from('projects').update({ sort_order: i }).eq('id', id)),
+      changedOrder(items).map(({ id, sort_order }) =>
+        this.sb.client.from('projects').update({ sort_order }).eq('id', id),
+      ),
     );
     const failed = results.find((r) => r.error);
     if (failed?.error) throw friendlyError(failed.error);
@@ -129,23 +132,27 @@ export class ProjectsService {
 
   // ------------------------------------------------------------- Display helpers
 
-  /** Cover image: explicit cover → first image → YouTube thumbnail → null. */
+  /**
+   * Card image, always a small file where one exists:
+   * explicit cover → first image's thumbnail → YouTube thumbnail → first video's poster → null.
+   */
   coverUrl(p: Project): string | null {
     if (p.cover_path) return this.sb.publicUrl(p.cover_path);
     const media = p.project_media ?? [];
     const image = media.find((m) => m.type === 'image' && m.storage_path);
-    if (image?.storage_path) return this.sb.publicUrl(image.storage_path);
+    if (image) return this.thumbUrl(image);
     for (const m of media) {
       const thumb = m.type === 'video_embed' ? parseVideoUrl(m.embed_url)?.thumbnailUrl : null;
       if (thumb) return thumb;
     }
-    return null;
+    const poster = media.find((m) => m.type === 'video_file' && m.thumb_path);
+    return poster ? this.thumbUrl(poster) : null;
   }
 
   /**
-   * Fallback when there's no cover image: the first uploaded video file, so the
-   * card can show its opening frame. `#t=0.1` makes browsers (incl. iOS Safari)
-   * render a real frame instead of a black one.
+   * Last-resort card preview for older uploads (no cover, no image, no poster): the first
+   * video file, so the card can show its opening frame. Render it with `appLazySrc` so it only
+   * loads near the viewport. `#t=0.1` makes browsers (incl. iOS Safari) show a real frame.
    */
   previewVideoUrl(p: Project): string | null {
     if (this.coverUrl(p)) return null;
@@ -157,7 +164,14 @@ export class ProjectsService {
     return (p.project_media ?? []).some((m) => m.type !== 'image');
   }
 
+  /** Full file (lightbox, video player). */
   mediaUrl(m: ProjectMedia): string | null {
     return m.storage_path ? this.sb.publicUrl(m.storage_path) : null;
+  }
+
+  /** Small preview: thumbnail or video poster, else the image itself (see `previewPath`). */
+  thumbUrl(m: ProjectMedia): string | null {
+    const path = previewPath(m);
+    return path ? this.sb.publicUrl(path) : null;
   }
 }

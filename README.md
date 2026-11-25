@@ -38,6 +38,7 @@ The site runs without Supabase. Until it's connected, the portfolio shows a "com
    - [0001_init.sql](supabase/migrations/0001_init.sql): the tables, security rules (RLS), and the public `project-media` storage bucket.
    - [0002_hardening.sql](supabase/migrations/0002_hardening.sql): rate-limits the contact form and blocks SVG uploads.
    - [0003_inquiry_context.sql](supabase/migrations/0003_inquiry_context.sql): inquiries remember the project the visitor clicked "Start a project" on, plus their "What did you like" picks and timeline. It also limits which inquiry columns visitors can write.
+   - [0004_media_thumbs.sql](supabase/migrations/0004_media_thumbs.sql): stores a small thumbnail (or video poster frame) next to each upload, so pages load small previews instead of full-size files.
 3. **Add the keys to the app.** Put these two values into [src/environments/environment.ts](src/environments/environment.ts):
    - **Project URL**: `https://<project-id>.supabase.co`. Take the *Project ID* from *Project Settings → General*. The full URL is also shown under *Integrations → Data API* and behind the **Connect** button at the top of the dashboard.
    - **Publishable key** (`sb_publishable_…`), from *Project Settings → API Keys*. The legacy `anon` key also works.
@@ -84,6 +85,15 @@ Only the project's id is sent from the browser. The database checks that the pro
 
 **Shipping database changes:** the website deploys on every push, but migrations and the Edge Function are deployed by hand. Recommended order: run the migration, deploy the function, then push the site. The contact form keeps working in any order: if the database doesn't have the new columns yet, the project, picks and timeline are added to the end of the message instead.
 
+### Keeping the site fast with lots of media
+
+Uploads are optimised in the browser before they're sent:
+- Images are resized to at most 2048 px and saved as WebP (JPEG on Safari), plus an 800 px thumbnail. Cards and galleries load the thumbnail; the full image only loads in the viewer.
+- Videos get a poster frame, so pages show a still image and the video only downloads when someone presses play.
+- Cover images are resized to at most 1600 px.
+
+Media uploaded before `0004_media_thumbs.sql` still works, just without these savings (videos load as they scroll into view). To optimise an older item, delete it and upload it again. Large or long videos are still best added as YouTube/Vimeo links: uploaded videos are stored as-is, up to 50 MB.
+
 ## Customize
 
 | What | Where |
@@ -101,10 +111,10 @@ Only the project's id is sent from the browser. The database checks that the pro
 - Build output directory: `dist/exodus-office-website/browser`
 - Environment variable: `NODE_VERSION` = `24`
 
-SPA routing works automatically. [public/_headers](public/_headers) adds the security headers, including a Content Security Policy. If you add a new external source (another Supabase project, font, or video provider), update the CSP there.
+SPA routing works automatically. [public/_headers](public/_headers) adds the security headers, including a Content Security Policy, and long-term caching for the build's hashed JS/CSS/font files. If you add a new external source (another Supabase project, font, or video provider), update the CSP there.
 
 **Netlify:** same build command and publish directory. [public/_redirects](public/_redirects) handles SPA routing, and `_headers` works there too.
-**Vercel:** [vercel.json](vercel.json) is included, but Vercel's free Hobby plan is for non-commercial use only, and it doesn't read `_headers`.
+**Vercel:** [vercel.json](vercel.json) is included, but Vercel's free Hobby plan is for non-commercial use only, and it doesn't read `_headers` (copy its security and caching headers into `vercel.json` if you move there).
 
 ### Custom domain (`exodushomeoffice.com`)
 The domain is registered with Cloudflare Registrar, so DNS is already on Cloudflare.

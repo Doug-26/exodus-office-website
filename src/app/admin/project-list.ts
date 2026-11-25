@@ -4,6 +4,7 @@ import { InquiriesService } from '../data/inquiries.service';
 import { categoryInfo, Project } from '../data/models';
 import { ProjectsService } from '../data/projects.service';
 import { ProjectThumb } from '../shared/project-thumb';
+import { withIndexOrder } from '../shared/utils/sort-order';
 
 @Component({
   selector: 'app-project-list',
@@ -139,7 +140,10 @@ export class ProjectList {
     const target = index + delta;
     [list[index], list[target]] = [list[target], list[index]];
     this.projects.set(list);
-    await this.run(() => this.svc.saveOrder(list.map((p) => p.id)));
+    await this.run(async () => {
+      await this.svc.saveOrder(list);
+      this.projects.set(withIndexOrder(list));
+    });
   }
 
   protected async remove(p: Project): Promise<void> {

@@ -92,6 +92,20 @@ describe('parseVideoUrl', () => {
     expect(parseVideoUrl(url)).toBeNull();
   });
 
+  it.each([
+    [`https://youtu.be/${ID}`, `https://www.youtube-nocookie.com/embed/${ID}?rel=0&autoplay=1`],
+    ['https://vimeo.com/76979871', 'https://player.vimeo.com/video/76979871?autoplay=1'],
+    ['https://vimeo.com/76979871/abc123ef', 'https://player.vimeo.com/video/76979871?h=abc123ef&autoplay=1'],
+    [
+      'https://www.facebook.com/reel/1234567890123456',
+      `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
+        'https://www.facebook.com/watch/?v=1234567890123456',
+      )}&show_text=false&autoplay=true`,
+    ],
+  ])('builds an autoplay URL for %s', (url, expected) => {
+    expect(parseVideoUrl(url)?.autoplayUrl).toBe(expected);
+  });
+
   it('drops an unsafe Vimeo hash instead of passing it through', () => {
     expect(parseVideoUrl('https://player.vimeo.com/video/123?h=<x>')?.embedUrl).toBe('https://player.vimeo.com/video/123');
   });

@@ -1,4 +1,13 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CATEGORIES, Project, ProjectCategory } from '../../data/models';
 import { ProjectsService } from '../../data/projects.service';
@@ -6,6 +15,9 @@ import { injectMasonryColumns } from '../../shared/masonry';
 import { PageHeader } from '../../shared/page-header';
 import { ProjectCard } from '../../shared/project-card';
 import { toColumns } from '../../shared/utils/masonry';
+
+/** Projects rendered per batch: a multiple of 1, 2 and 3 columns. */
+const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-portfolio',
@@ -60,12 +72,19 @@ import { toColumns } from '../../shared/utils/masonry';
           <div class="ex-masonry">
             @for (col of columns(); track $index) {
               <div class="ex-masonry-col">
-                @for (p of col; track p.id) {
-                  <app-project-card [project]="p" />
+                @for (p of col; track p.id; let first = $first) {
+                  <app-project-card [project]="p" [eager]="first" />
                 }
               </div>
             }
           </div>
+          @if (remaining()) {
+            <div class="text-center mt-5">
+              <button type="button" class="btn btn-outline-primary" (click)="showMore()">
+                Show more projects ({{ remaining() }} more)
+              </button>
+            </div>
+          }
         } @else {
           <div class="ex-empty">
             <i class="bi bi-collection-play d-block mb-3" aria-hidden="true"></i>
@@ -83,6 +102,8 @@ import { toColumns } from '../../shared/utils/masonry';
 })
 export class Portfolio {
   private readonly projects = inject(ProjectsService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   protected readonly all = signal<Project[]>([]);
   protected readonly loading = signal(true);
@@ -98,8 +119,20 @@ export class Portfolio {
     return a === 'all' ? this.all() : this.all().filter((p) => p.category === a);
   });
 
+  /**
+   * How many projects are rendered. Cards (and their images) are added in batches so a large
+   * portfolio doesn't load everything at once; switching filters starts over.
+   */
+  private readonly shown = linkedSignal(() => {
+    this.active();
+    return PAGE_SIZE;
+  });
+  protected readonly remaining = computed(() => Math.max(0, this.visible().length - this.shown()));
+
   private readonly columnCount = injectMasonryColumns();
-  protected readonly columns = computed(() => toColumns(this.visible(), this.columnCount()));
+  protected readonly columns = computed(() =>
+    toColumns(this.visible().slice(0, this.shown()), this.columnCount()),
+  );
   protected readonly skeletonColumns = computed(() =>
     toColumns([16, 22, 18, 20, 16, 24], this.columnCount()),
   );
@@ -110,5 +143,19 @@ export class Portfolio {
       .then((p) => this.all.set(p))
       .catch((e: Error) => this.error.set(e.message))
       .finally(() => this.loading.set(false));
+  }
+
+  /** Renders the next batch and moves keyboard focus to its first card. */
+  protected showMore(): void {
+    const next = this.visible()[this.shown()];
+    this.shown.update((n) => n + PAGE_SIZE);
+    if (!next) return;
+    afterNextRender(
+      () =>
+        this.host.nativeElement
+          .querySelector<HTMLElement>(`a[href="/portfolio/${next.slug}"]`)
+          ?.focus(),
+      { injector: this.injector },
+    );
   }
 }

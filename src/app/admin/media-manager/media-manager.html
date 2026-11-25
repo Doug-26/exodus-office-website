@@ -45,12 +45,14 @@
 
             <div class="ex-thumb ex-thumb--lg">
               @if (thumb(m); as src) {
-                <img [src]="src" alt="" loading="lazy" />
-              } @else if (m.type === 'video_file' && fileUrl(m)) {
+                <img [src]="src" alt="" loading="lazy" decoding="async" />
+              } @else if (m.type === 'video_file' && m.storage_path) {
+                <!-- Older upload without a poster frame. -->
                 <video
-                  [src]="fileUrl(m)"
-                  preload="metadata"
+                  [appLazySrc]="fileUrl(m) + '#t=0.1'"
                   muted
+                  playsinline
+                  aria-hidden="true"
                   class="w-100 h-100"
                   style="object-fit: cover"
                 ></video>
@@ -172,6 +174,8 @@
                   (click)="dismissUpload(u.key)"
                   aria-label="Dismiss"
                 ></button>
+              } @else if (u.optimizing) {
+                <span>Optimizing…</span>
               } @else {
                 <span>{{ u.progress }}%</span>
               }
