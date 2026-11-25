@@ -86,6 +86,14 @@ export class ProjectsService {
     return data ? sortMedia(data as Project) : null;
   }
 
+  /** Projects by id, in any order. No request for an empty list. */
+  async listByIds(ids: readonly string[]): Promise<Project[]> {
+    if (!ids.length) return [];
+    const { data, error } = await this.sb.client.from('projects').select(PROJECT_WITH_MEDIA).in('id', [...ids]);
+    if (error) throw friendlyError(error);
+    return (data as Project[]).map(sortMedia);
+  }
+
   async create(input: ProjectInput): Promise<Project> {
     const { data, error } = await this.sb.client.from('projects').insert(input).select().single();
     if (error) throw friendlyError(error);

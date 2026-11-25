@@ -1,13 +1,18 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
-import { Inquiry, InquiryStatus } from '../data/models';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { Inquiry, InquiryStatus, Project } from '../data/models';
 import { InquiriesService } from '../data/inquiries.service';
+import { ProjectsService } from '../data/projects.service';
+import { projectRef, replySubject } from '../shared/utils/inquiry-project';
+import { SITE } from '../site.config';
+import { InquiryProject } from './inquiry-project';
 
 type Filter = InquiryStatus | 'all';
 
 @Component({
   selector: 'app-inquiries',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink, InquiryProject],
   template: `
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
       <div>
@@ -25,6 +30,13 @@ type Filter = InquiryStatus | 'all';
         }
       </div>
     </div>
+
+    @if (projectFilter()) {
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="small">Showing inquiries about <strong>{{ filterTitle() }}</strong></span>
+        <a class="btn btn-sm btn-light" routerLink="/admin/inquiries"><i class="bi bi-x-lg me-1" aria-hidden="true"></i>Clear</a>
+      </div>
+    }
 
     @if (error()) {
       <div class="alert alert-danger" role="alert">{{ error() }}</div>
@@ -50,6 +62,9 @@ type Filter = InquiryStatus | 'all';
                     @if (q.service) {
                       <span class="badge ex-badge-cat ms-2">{{ q.service }}</span>
                     }
+                    @if (refs().get(q.id); as r) {
+                      <span class="badge ex-badge-ref ms-2"><span class="visually-hidden">About project: </span><span aria-hidden="true">Re: </span>{{ r.title }}</span>
+                    }
                   </span>
                   <span class="small text-body-secondary">{{ q.created_at | date: 'medium' }}</span>
                 </span>
@@ -59,6 +74,25 @@ type Filter = InquiryStatus | 'all';
               </button>
 
               @if (openId() === q.id) {
+                @if (refs().get(q.id); as r) {
+                  <app-inquiry-project class="mt-3" [ref]="r" />
+                }
+                @if (q.liked?.length || q.timeline) {
+                  <dl class="ex-inquiry__facts mt-3 mb-0">
+                    @if (q.liked?.length) {
+                      <dt>Liked</dt>
+                      <dd>
+                        @for (l of q.liked ?? []; track l) {
+                          <span class="ex-tool">{{ l }}</span>
+                        }
+                      </dd>
+                    }
+                    @if (q.timeline) {
+                      <dt>Timeline</dt>
+                      <dd>{{ q.timeline }}</dd>
+                    }
+                  </dl>
+                }
                 <p class="ex-prose mt-3">{{ q.message }}</p>
                 <div class="d-flex flex-wrap gap-2">
                   <a class="btn btn-sm btn-primary" [href]="replyLink(q)"><i class="bi bi-reply me-1" aria-hidden="true"></i>Reply by email</a>
@@ -82,6 +116,10 @@ type Filter = InquiryStatus | 'all';
 })
 export class Inquiries {
   private readonly svc = inject(InquiriesService);
+  private readonly projects = inject(ProjectsService);
+
+  /** Optional `?project=<id>` from the project list's "N inquiries" link. */
+  readonly projectFilter = input<string | undefined>(undefined, { alias: 'project' });
 
   protected readonly filters: { value: Filter; label: string }[] = [
     { value: 'new', label: 'New' },
@@ -91,32 +129,62 @@ export class Inquiries {
   ];
 
   protected readonly all = signal<Inquiry[]>([]);
+  /** Projects referenced by the inquiries, by id. */
+  private readonly byId = signal<ReadonlyMap<string, Project>>(new Map());
   protected readonly filter = signal<Filter>('new');
   protected readonly openId = signal<string | null>(null);
   protected readonly loading = signal(true);
   protected readonly busy = signal(false);
   protected readonly error = signal('');
 
+  protected readonly refs = computed(() => {
+    const byId = this.byId();
+    return new Map(this.all().map((q) => [q.id, projectRef(q, byId)]));
+  });
   protected readonly newCount = computed(() => this.all().filter((q) => q.status === 'new').length);
   protected readonly visible = computed(() => {
     const f = this.filter();
     const open = this.openId();
-    return f === 'all' ? this.all() : this.all().filter((q) => q.status === f || q.id === open);
+    const project = this.projectFilter();
+    const list = project ? this.all().filter((q) => q.project_id === project) : this.all();
+    return f === 'all' ? list : list.filter((q) => q.status === f || q.id === open);
+  });
+  protected readonly filterTitle = computed(() => {
+    const id = this.projectFilter();
+    if (!id) return '';
+    return this.byId().get(id)?.title ?? this.all().find((q) => q.project_id === id)?.project_title ?? 'this project';
   });
 
   constructor() {
-    this.svc
-      .list()
-      .then((list) => {
-        this.all.set(list);
-        if (!list.some((q) => q.status === 'new')) this.filter.set('all');
-      })
-      .catch((e: Error) => this.error.set(e.message))
-      .finally(() => this.loading.set(false));
+    void this.load();
+  }
+
+  private async load(): Promise<void> {
+    try {
+      const list = await this.svc.list();
+      this.all.set(list);
+      if (this.projectFilter() || !list.some((q) => q.status === 'new')) this.filter.set('all');
+      await this.loadProjects(list);
+    } catch (e) {
+      this.error.set((e as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  /** Loads the referenced projects; if that fails the saved titles are shown instead. */
+  private async loadProjects(list: Inquiry[]): Promise<void> {
+    const ids = [...new Set(list.map((q) => q.project_id).filter((id): id is string => !!id))];
+    try {
+      const found = await this.projects.listByIds(ids);
+      this.byId.set(new Map(found.map((p) => [p.id, p])));
+    } catch {
+      // Keep the snapshots.
+    }
   }
 
   protected replyLink(q: Inquiry): string {
-    const subject = encodeURIComponent(`Re: Your inquiry to Exodus Home Office${q.service ? ` (${q.service})` : ''}`);
+    const subject = encodeURIComponent(replySubject(q, SITE.name));
     return `mailto:${encodeURIComponent(q.email)}?subject=${subject}`;
   }
 

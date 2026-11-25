@@ -76,7 +76,7 @@
             <div class="ex-card mt-4 p-4">
               <h2 class="h6">Want something similar?</h2>
               <p class="small text-body-secondary">Tell us about your project and we'll get back to you.</p>
-              <a routerLink="/contact" class="btn btn-primary w-100">Start a project</a>
+              <a routerLink="/contact" [queryParams]="contactParams()" class="btn btn-primary w-100">Start a project</a>
             </div>
           </div>
         </aside>

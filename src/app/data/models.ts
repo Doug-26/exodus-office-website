@@ -85,6 +85,41 @@ export interface Inquiry {
   message: string;
   status: InquiryStatus;
   created_at: string;
+  // Added by 0003_inquiry_context.sql. Optional because they're missing until that
+  // migration runs; treat undefined like null/empty.
+  /** Project the visitor was looking at ("Want something similar?"). Null once it's deleted. */
+  project_id?: string | null;
+  /** Title/slug saved by the database when the inquiry was sent (not editable by visitors). */
+  project_title?: string | null;
+  project_slug?: string | null;
+  /** Picks from LIKED_OPTIONS. */
+  liked?: string[];
+  /** One of TIMELINE_OPTIONS. */
+  timeline?: string | null;
 }
 
-export type InquiryInput = Pick<Inquiry, 'name' | 'email' | 'service' | 'message'>;
+export type InquiryInput = Pick<Inquiry, 'name' | 'email' | 'service' | 'message'> &
+  Partial<Pick<Inquiry, 'liked' | 'timeline'>>;
+
+/**
+ * "What did you like about it?" picks, shown on the contact form when a project is attached.
+ * Stored as these labels (max 8 picks), so they can be reworded without a migration.
+ */
+export const LIKED_OPTIONS: readonly string[] = [
+  'Overall style and look',
+  'Editing pace and transitions',
+  'Animation and motion',
+  'Colors and typography',
+  'Music and sound',
+  'Format and length',
+  'Story and tone',
+];
+
+/** "When do you need it?" answers (max 40 characters each, stored as the label). */
+export const TIMELINE_OPTIONS: readonly string[] = [
+  'As soon as possible',
+  'Within 2 weeks',
+  'Within a month',
+  'In 1–3 months',
+  'Just exploring for now',
+];

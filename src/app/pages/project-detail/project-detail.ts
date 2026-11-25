@@ -5,6 +5,7 @@ import { Supabase } from '../../core/supabase';
 import { categoryInfo, Project, ratioClass } from '../../data/models';
 import { ProjectsService } from '../../data/projects.service';
 import { Lightbox, LightboxImage } from '../../shared/lightbox';
+import { projectContactParams } from '../../shared/utils/inquiry-project';
 import { VideoEmbed } from '../../shared/video-embed';
 
 @Component({
@@ -28,6 +29,11 @@ export class ProjectDetail {
   protected readonly category = computed(() => {
     const p = this.project();
     return p ? categoryInfo(p.category) : null;
+  });
+  /** "Start a project" carries this project (and a matching service) to the contact form. */
+  protected readonly contactParams = computed(() => {
+    const p = this.project();
+    return p ? projectContactParams(p) : null;
   });
   protected readonly videos = computed(() => (this.project()?.project_media ?? []).filter((m) => m.type !== 'image'));
   protected readonly images = computed<LightboxImage[]>(() => {

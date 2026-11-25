@@ -9,15 +9,23 @@
     <div class="row g-4 g-lg-5">
       <div class="col-lg-7">
         <div class="ex-card p-4 p-lg-5">
+          <p class="visually-hidden" role="status">{{ announcement() }}</p>
           @if (status() === 'sent') {
             <div class="text-center py-5" role="status">
               <span class="ex-icon-badge ex-icon-badge--lg mb-4"><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
               <h2 class="h3">Thank you! Your message is on its way.</h2>
-              <p class="text-body-secondary mb-4">We've received your inquiry and will get back to you soon.</p>
+              <p class="text-body-secondary mb-4">
+                We've received your inquiry@if (sentAbout(); as title) { about “{{ title }}”} and will get back to you soon.
+              </p>
               <button type="button" class="btn btn-outline-primary" (click)="status.set('idle')">Send another message</button>
             </div>
           } @else {
-            <h2 class="h4 mb-4">Send us a message</h2>
+            <h2 #formHeading class="h4 mb-4" tabindex="-1">Send us a message</h2>
+            @if (attached(); as p) {
+              <app-project-reference class="mb-4" [project]="p" (removed)="removeProject()" />
+            } @else if (resolving()) {
+              <div class="ex-skeleton mb-4" style="height: 6.5rem" aria-hidden="true"></div>
+            }
             <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
               <div class="row g-3">
                 <div class="col-md-6">
@@ -30,7 +38,7 @@
                   <input id="email" type="email" class="form-control" formControlName="email" autocomplete="email" [class.is-invalid]="invalid('email')" />
                   <div class="invalid-feedback">Please enter a valid email address.</div>
                 </div>
-                <div class="col-12">
+                <div class="col-md-6">
                   <label for="service" class="form-label">Service you're interested in <span class="text-body-secondary">(optional)</span></label>
                   <select id="service" class="form-select" formControlName="service">
                     <option value="">Choose a service…</option>
@@ -39,9 +47,33 @@
                     }
                   </select>
                 </div>
+                <div class="col-md-6">
+                  <label for="timeline" class="form-label">When do you need it? <span class="text-body-secondary">(optional)</span></label>
+                  <select id="timeline" class="form-select" formControlName="timeline">
+                    <option value="">Choose a timeline…</option>
+                    @for (o of timelineOptions; track o) {
+                      <option [value]="o">{{ o }}</option>
+                    }
+                  </select>
+                </div>
+                @if (attached()) {
+                  <div class="col-12">
+                    <app-liked-picks [options]="likedOptions" [(selected)]="liked" />
+                  </div>
+                }
                 <div class="col-12">
-                  <label for="message" class="form-label">How can we help?</label>
-                  <textarea id="message" rows="6" class="form-control" formControlName="message" [class.is-invalid]="invalid('message')"></textarea>
+                  <label for="message" class="form-label">{{ attached() ? 'Tell us about your project' : 'How can we help?' }}</label>
+                  <textarea
+                    id="message"
+                    rows="6"
+                    class="form-control"
+                    formControlName="message"
+                    [class.is-invalid]="invalid('message')"
+                    [attr.aria-describedby]="attached() ? 'message-hint' : null"
+                  ></textarea>
+                  @if (attached()) {
+                    <div id="message-hint" class="form-text">What should be the same, and what should be different for yours?</div>
+                  }
                   <div class="invalid-feedback">Please write a short message (at least 10 characters).</div>
                 </div>
 

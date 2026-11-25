@@ -1,11 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { InquiriesService } from '../data/inquiries.service';
 import { categoryInfo, Project } from '../data/models';
 import { ProjectsService } from '../data/projects.service';
+import { ProjectThumb } from '../shared/project-thumb';
 
 @Component({
   selector: 'app-project-list',
-  imports: [RouterLink],
+  imports: [RouterLink, ProjectThumb],
   template: `
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
       <div>
@@ -53,18 +55,15 @@ import { ProjectsService } from '../data/projects.service';
                   </td>
                   <td>
                     <div class="d-flex align-items-center gap-3">
-                      <div class="ex-thumb">
-                        @if (svc.coverUrl(p); as src) {
-                          <img [src]="src" alt="" loading="lazy" />
-                        } @else if (svc.previewVideoUrl(p); as video) {
-                          <video [src]="video" muted playsinline preload="metadata" aria-hidden="true"></video>
-                        } @else {
-                          <i class="bi bi-image" aria-hidden="true"></i>
-                        }
-                      </div>
+                      <app-project-thumb [project]="p" />
                       <div>
                         <a class="fw-semibold" [routerLink]="['/admin/projects', p.id]">{{ p.title }}</a>
-                        <div class="small text-body-secondary">/portfolio/{{ p.slug }} · {{ p.project_media?.length ?? 0 }} media</div>
+                        <div class="small text-body-secondary">
+                          /portfolio/{{ p.slug }} · {{ p.project_media?.length ?? 0 }} media
+                          @if (counts().get(p.id); as n) {
+                            · <a routerLink="/admin/inquiries" [queryParams]="{ project: p.id }">{{ n }} {{ n === 1 ? 'inquiry' : 'inquiries' }}</a>
+                          }
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -97,8 +96,11 @@ import { ProjectsService } from '../data/projects.service';
 })
 export class ProjectList {
   protected readonly svc = inject(ProjectsService);
+  private readonly inquiries = inject(InquiriesService);
 
   protected readonly projects = signal<Project[]>([]);
+  /** Inquiries per project id ("Want something similar?" on the project page). */
+  protected readonly counts = signal<ReadonlyMap<string, number>>(new Map());
   protected readonly loading = signal(true);
   protected readonly busy = signal(false);
   protected readonly error = signal('');
@@ -113,7 +115,9 @@ export class ProjectList {
 
   private async load(): Promise<void> {
     try {
-      this.projects.set(await this.svc.listAll());
+      const [projects, counts] = await Promise.all([this.svc.listAll(), this.inquiries.countsByProject()]);
+      this.projects.set(projects);
+      this.counts.set(counts);
     } catch (e) {
       this.error.set((e as Error).message);
     } finally {

@@ -34,8 +34,10 @@ The site runs without Supabase. Until it's connected, the portfolio shows a "com
 ## Connect Supabase (one-time setup)
 
 1. **Create a project** at [supabase.com](https://supabase.com). The free tier is enough to start.
-2. **Create the database.** Open *SQL Editor*, paste the contents of [supabase/migrations/0001_init.sql](supabase/migrations/0001_init.sql), and click **Run**.
-   This creates the tables, security rules (RLS), and the public `project-media` storage bucket.
+2. **Create the database.** Open *SQL Editor*, then paste and **Run** each file in [supabase/migrations/](supabase/migrations/) in order:
+   - [0001_init.sql](supabase/migrations/0001_init.sql): the tables, security rules (RLS), and the public `project-media` storage bucket.
+   - [0002_hardening.sql](supabase/migrations/0002_hardening.sql): rate-limits the contact form and blocks SVG uploads.
+   - [0003_inquiry_context.sql](supabase/migrations/0003_inquiry_context.sql): inquiries remember the project the visitor clicked "Start a project" on, plus their "What did you like" picks and timeline. It also limits which inquiry columns visitors can write.
 3. **Add the keys to the app.** Put these two values into [src/environments/environment.ts](src/environments/environment.ts):
    - **Project URL**: `https://<project-id>.supabase.co`. Take the *Project ID* from *Project Settings → General*. The full URL is also shown under *Integrations → Data API* and behind the **Connect** button at the top of the dashboard.
    - **Publishable key** (`sb_publishable_…`), from *Project Settings → API Keys*. The legacy `anon` key also works.
@@ -64,10 +66,23 @@ Every inquiry is always saved and visible in `/admin/inquiries`. To also get an 
      WEBHOOK_SECRET=<a-long-random-string>
    supabase functions deploy notify-inquiry --no-verify-jwt
    ```
+   Links in the email (the project the visitor asked about, and the admin Inquiries page) use `https://exodushomeoffice.com`. To use another domain, also set `SITE_URL=https://your-domain`.
 3. In the dashboard, open *Integrations → Database Webhooks* (older dashboards: *Database → Webhooks*). The first time, click **Install integration** to enable the `pg_net` extension (choose the `extensions` schema if asked). Then open the **Webhooks** tab → *Create a new hook*:
    - Table: `inquiries`, Events: **Insert**
    - Type: **Supabase Edge Functions** → `notify-inquiry`, method POST
    - HTTP header: `x-webhook-secret` = the same `WEBHOOK_SECRET` value
+
+### "Want something similar?" inquiries
+
+The **Start a project** button on a project page opens `/contact?project=<slug>`. The contact form then shows a "You're asking about" card (the visitor can remove it) and optional "What did you like about it?" picks. Every inquiry also has an optional "When do you need it?" question.
+
+- The email subject and body name the project, with a link to it.
+- In `/admin/inquiries` the inquiry shows a "Re: <project>" badge and, when opened, the project with *View on site* / *Edit project* links. The reply email subject names the project too.
+- `/admin/projects` shows how many inquiries each project has brought in, linking to those inquiries.
+
+Only the project's id is sent from the browser. The database checks that the project is published and saves its title itself, so the inquiry still makes sense after the project is renamed or deleted.
+
+**Shipping database changes:** the website deploys on every push, but migrations and the Edge Function are deployed by hand. Recommended order: run the migration, deploy the function, then push the site. The contact form keeps working in any order: if the database doesn't have the new columns yet, the project, picks and timeline are added to the end of the message instead.
 
 ## Customize
 
@@ -96,11 +111,11 @@ The domain is registered with Cloudflare Registrar, so DNS is already on Cloudfl
 1. *Workers & Pages → (project) → Custom domains → Set up a custom domain*: add `exodushomeoffice.com`, then add `www.exodushomeoffice.com` too.
 2. Send `www` and `*.pages.dev` traffic to the main domain with a 301 redirect (*Rules → Redirect Rules* for `www`; *Bulk Redirects* for `pages.dev`). `_redirects` can't redirect between domains.
 3. Supabase *Authentication → URL Configuration*: set Site URL to `https://exodushomeoffice.com` and add `https://exodushomeoffice.com/**` to Redirect URLs.
-4. The live URL is `SITE.url` in [src/app/site.config.ts](src/app/site.config.ts), and it's also hardcoded in [src/index.html](src/index.html), [public/robots.txt](public/robots.txt) and [public/sitemap.xml](public/sitemap.xml). If the domain ever changes, update all four.
+4. The live URL is `SITE.url` in [src/app/site.config.ts](src/app/site.config.ts), and it's also hardcoded in [src/index.html](src/index.html), [public/robots.txt](public/robots.txt), [public/sitemap.xml](public/sitemap.xml) and (as the `SITE_URL` default) [supabase/functions/notify-inquiry/index.ts](supabase/functions/notify-inquiry/index.ts). If the domain ever changes, update all five, or set the `SITE_URL` secret instead of editing the function.
 5. Email: *Email → Email Routing* forwards `contact@exodushomeoffice.com` to an existing inbox for free (one destination per address, so use a Google Group to reach the whole team). For notifications, verify the domain in Resend (it adds DNS records to Cloudflare) and send from it, e.g. `NOTIFY_FROM="Exodus Website <website@exodushomeoffice.com>"`. `NOTIFY_TO` takes a comma-separated list, so every teammate can get inquiry emails.
 
 ### Before going live
-1. Run [supabase/migrations/0002_hardening.sql](supabase/migrations/0002_hardening.sql). It rate-limits the contact form and blocks SVG uploads.
+1. Make sure every migration in [supabase/migrations/](supabase/migrations/) has been run (see setup step 2). `0002_hardening.sql` rate-limits the contact form, and `0003_inquiry_context.sql` closes a gap that let scripts set an inquiry's date and slip past that limit.
 2. Turn off public sign-ups (see setup step 4) and set *Authentication → URL Configuration → Site URL* to the live URL.
 3. Check *Advisors → Security Advisor* in the Supabase dashboard.
 
@@ -120,5 +135,5 @@ src/app/
   pages/      Public pages (home, about, services, portfolio, project detail, contact, 404)
   admin/      Lazy-loaded admin panel (login, projects, media manager, inquiries)
 src/styles/   Theme variables, base styles, component styles, admin styles
-supabase/     SQL migration and the notify-inquiry Edge Function
+supabase/     SQL migrations and the notify-inquiry Edge Function
 ```

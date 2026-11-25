@@ -36,30 +36,6 @@
   }
 }
 
-.ex-thumb {
-  width: 4rem;
-  height: 3rem;
-  flex-shrink: 0;
-  overflow: hidden;
-  border-radius: $border-radius-sm;
-  background: $ex-sand;
-  display: grid;
-  place-items: center;
-  color: $ex-muted;
-
-  img,
-  video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  &--lg {
-    width: 6rem;
-    height: 4.5rem;
-  }
-}
-
 .ex-dropzone {
   display: block;
   padding: 2rem 1rem;
@@ -103,4 +79,34 @@
   &.is-new {
     border-left: 4px solid $ex-teal;
   }
+
+  // Liked picks / timeline in an opened inquiry.
+  &__facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.35rem 1rem;
+    align-items: baseline;
+
+    dt {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: $ex-muted;
+    }
+
+    dd {
+      margin: 0;
+    }
+  }
+}
+
+// "Re: <project>" badge on an inquiry that came from a project page.
+.ex-badge-ref {
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  font-weight: 600;
+  color: $ex-navy;
+  background: $ex-sand;
+  border: 1px solid rgba($ex-navy, 0.12);
 }

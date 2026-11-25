@@ -29,7 +29,7 @@ Production build budgets ([angular.json](angular.json)): initial bundle warns at
 
 ### Data flow: browser → Supabase directly, security lives in RLS
 There is no custom backend server. Angular services call Supabase with the **publishable (anon) key** from [src/environments/environment.ts](src/environments/environment.ts). All authorization is enforced by Row Level Security in [supabase/migrations/0001_init.sql](supabase/migrations/0001_init.sql):
-- anon: read **published** projects and their media; insert inquiries (never read them).
+- anon: read **published** projects and their media; insert inquiries (never read them), and only the columns granted in [0003_inquiry_context.sql](supabase/migrations/0003_inquiry_context.sql) (`name, email, service, message, project_id, liked, timeline`). A new visitor-writable inquiry column needs adding to that column grant in a new migration.
 - admin: full access. "Admin" = signed-in user whose id is in `public.admins`, checked by the `is_admin()` SECURITY DEFINER function.
 - Storage bucket `project-media` is public-read, admin-only write, 50 MB per-file limit.
 
@@ -43,7 +43,10 @@ Any new table or operation needs matching grants + RLS policies in SQL. Client-s
 - `data/`: `models.ts` (TS types mirroring the SQL enums/tables) and promise-based services (`ProjectsService`, `MediaService`, `InquiriesService`). Services throw `Error`s with admin-friendly messages via `friendlyError()` (e.g. Postgres `23505` → duplicate slug). `services.data.ts` holds static marketing copy.
 - `pages/`: public pages, lazy-loaded under `PublicLayout` (navbar/footer).
 - `admin/`: lazy-loaded route tree ([admin.routes.ts](src/app/admin/admin.routes.ts)); `/admin/projects/new` and `/admin/projects/:id` share `ProjectForm`.
-- `shared/`: presentational components + pure utils (`slug`, `video-url`, `media-aspect`, `min-duration`); the utils have the unit tests.
+- `shared/`: presentational components (incl. `ProjectThumb`, the cover → video frame → icon thumbnail) + pure utils (`slug`, `video-url`, `media-aspect`, `min-duration`, `inquiry-project`); the utils have the unit tests.
+
+### Inquiries that reference a project
+"Start a project" on `/portfolio/:slug` links to `/contact?project=<slug>&service=<id>` (`projectContactParams()`). The contact form resolves the slug with `getBySlug` and sends only `project_id`. The `set_inquiry_project()` BEFORE INSERT trigger keeps the id only for a published project and writes `project_title`/`project_slug` itself (visitors can't set them), so the snapshot survives renames and deletion (`on delete set null`) and travels in the webhook payload. Admin loads the referenced projects with `ProjectsService.listByIds()` (a second query, not an embed) and renders them via `projectRef()` (`live`/`unpublished`/`deleted`/`unresolved`). `InquiriesService.submit()` must keep working against a database one migration behind: it only sends the newer columns when set, and on `isMissingColumnError()` retries once with them folded into the message (`messageWithContext()`).
 
 ### Conventions seen across the code
 - Components are standalone, mostly with **inline templates**, using `inject()`, signals/`computed`, and the `@if`/`@for` control flow (no `*ngIf`/`*ngFor`). Data is loaded with async/await into signals (`loading`/`error`/data), not RxJS.
@@ -59,9 +62,11 @@ Any new table or operation needs matching grants + RLS policies in SQL. Client-s
 - Portfolio categories: `CATEGORIES` in [models.ts](src/app/data/models.ts) **and** the `project_category` enum in SQL. The same applies to media types, aspects (`16:9`, `9:16`, `1:1`, `4:5`), and inquiry statuses.
 - Aspect ratios map to Bootstrap `.ratio-*` classes; `4x5` and `9x16` are added in [styles.scss](src/styles.scss).
 - Schema changes: add a new numbered file in `supabase/migrations/`. It's applied manually via the Supabase SQL editor or `supabase db push`.
+- Inquiry columns: `Inquiry` in [models.ts](src/app/data/models.ts) **and** `InquiryRecord` in the Edge Function. `LIKED_OPTIONS` / `TIMELINE_OPTIONS` are stored as their labels (length-checked text, not enums), so rewording them needs no migration, but keep `liked` to ≤ 8 picks and timeline labels ≤ 40 characters.
+- Project category → contact-form service pre-selection: `CATEGORY_SERVICE` in [inquiry-project.ts](src/app/shared/utils/inquiry-project.ts) uses `ServiceInfo['id']`, so renaming a service id is a compile error there.
 
 ### Styling
 Brand tokens + Bootstrap variable overrides live in [src/styles/_variables.scss](src/styles/_variables.scss). [styles.scss](src/styles.scss) imports only the Bootstrap partials in use, so add the partial there if you use a Bootstrap component that isn't imported yet. Custom classes use the `ex-` prefix (`_components.scss`, `_admin.scss`). Business contact details/socials are in [site.config.ts](src/app/site.config.ts); empty values are hidden in the UI.
 
 ### Edge Function
-[supabase/functions/notify-inquiry/index.ts](supabase/functions/notify-inquiry/index.ts) (Deno) is triggered by a Database Webhook on inquiry INSERT. It checks the `x-webhook-secret` header and emails the office via Resend. It's deployed with `--no-verify-jwt`. Secrets: `RESEND_API_KEY`, `NOTIFY_TO`, `NOTIFY_FROM`, `WEBHOOK_SECRET`.
+[supabase/functions/notify-inquiry/index.ts](supabase/functions/notify-inquiry/index.ts) (Deno) is triggered by a Database Webhook on inquiry INSERT. It checks the `x-webhook-secret` header and emails the office via Resend. It's deployed with `--no-verify-jwt`. Secrets: `RESEND_API_KEY`, `NOTIFY_TO`, `NOTIFY_FROM`, `WEBHOOK_SECRET`, optional `SITE_URL` (defaults to the live domain; used for project and admin links). It uses only the payload record (no Supabase client), so every field it shows must be on the `inquiries` row; treat fields from newer migrations as optional.
