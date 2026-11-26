@@ -111,7 +111,7 @@ Media uploaded before `0004_media_thumbs.sql` still works, just without these sa
 - Build output directory: `dist/exodus-office-website/browser`
 - Environment variable: `NODE_VERSION` = `24`
 
-SPA routing works automatically. [public/_headers](public/_headers) adds the security headers, including a Content Security Policy, and long-term caching for the build's hashed JS/CSS/font files. If you add a new external source (another Supabase project, font, or video provider), update the CSP there.
+SPA routing works automatically. [public/_headers](public/_headers) adds the security headers, including a Content Security Policy. It deliberately does not mark JS/CSS as `immutable`: the SPA fallback answers missing files with `index.html`, and that response must never be cached as a script. If you add a new external source (another Supabase project, font, or video provider), update the CSP there.
 
 **Netlify:** same build command and publish directory. [public/_redirects](public/_redirects) handles SPA routing, and `_headers` works there too.
 **Vercel:** [vercel.json](vercel.json) is included, but Vercel's free Hobby plan is for non-commercial use only, and it doesn't read `_headers` (copy its security and caching headers into `vercel.json` if you move there).
